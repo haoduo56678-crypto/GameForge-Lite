@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GameForge Runtime GUI · Forge 1.20.1</title>
+  <meta name="description" content="下载 GameForge Runtime GUI，在 Minecraft Forge 1.20.1 中统一管理 GameForge 作品。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080c17;
+      --panel: rgba(17,24,41,.94);
+      --panel-2: rgba(26,36,57,.9);
+      --card: rgba(29,41,66,.92);
+      --line: rgba(147,178,238,.2);
+      --text: #eef4ff;
+      --muted: #9facbf;
+      --accent: #80a9ff;
+      --purple: #8c7dff;
+      --success: #77e2ac;
+      --warning: #ffd28d;
+      --danger: #ff8d9a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(84,117,225,.24), transparent 36rem),
+        radial-gradient(circle at 88% 14%, rgba(127,87,223,.2), transparent 32rem),
+        var(--bg);
+    }
+    a { color: inherit; }
+    code { color: #c7d8ff; }
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 26px 0 72px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .back { color: var(--muted); text-decoration:none; font-weight:750; }
+    .back:hover { color:var(--text); }
+    .status-pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:999px; color:#d4def0; background:rgba(255,255,255,.035); font-size:13px; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:var(--success); box-shadow:0 0 16px var(--success); }
+    .hero { display:grid; grid-template-columns: minmax(0,1fr) minmax(430px,.95fr); gap:48px; align-items:center; padding:64px 0 48px; }
+    .eyebrow { margin:0 0 14px; color:var(--accent); font-size:13px; font-weight:850; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(44px,7vw,84px); line-height:.96; letter-spacing:-.055em; }
+    .gradient { background:linear-gradient(120deg,#fff 5%,#a9c5ff 44%,#a89cff 92%); -webkit-background-clip:text; color:transparent; }
+    .lead { max-width:660px; margin:22px 0 0; color:var(--muted); font-size:18px; line-height:1.75; }
+    .actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:30px; }
+    .button { display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:0 22px; border-radius:15px; font-size:15px; font-weight:850; text-decoration:none; transition:.18s ease; }
+    .button:hover { transform:translateY(-2px); }
+    .primary { color:#07101f; background:linear-gradient(135deg,var(--accent),#b099ff); box-shadow:0 14px 35px rgba(78,112,221,.3); }
+    .secondary { border:1px solid var(--line); background:rgba(255,255,255,.035); color:var(--text); }
+    .meta { display:flex; flex-wrap:wrap; gap:14px; margin-top:20px; color:var(--muted); font-size:13px; }
+    .meta span { display:inline-flex; align-items:center; gap:7px; }
+    .meta b { color:var(--success); }
+
+    .preview-wrap { position:relative; }
+    .preview-glow { position:absolute; inset:12%; border-radius:50%; background:rgba(91,112,255,.3); filter:blur(70px); }
+    .runtime-window { position:relative; border:1px solid rgba(149,181,255,.28); border-radius:22px; overflow:hidden; background:#111829; box-shadow:0 34px 90px rgba(0,0,0,.5); transform:perspective(1200px) rotateY(-4deg) rotateX(1.5deg); }
+    .window-bar { display:flex; align-items:center; justify-content:space-between; padding:13px 15px; border-bottom:1px solid #334362; background:#0d1423; }
+    .window-brand { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:850; letter-spacing:.1em; }
+    .mini-logo { display:grid; place-items:center; width:26px; height:26px; border:2px solid var(--purple); color:var(--accent); font-size:10px; }
+    .window-version { color:#8fa1bb; font-size:10px; }
+    .window-body { display:grid; grid-template-columns:142px 1fr; min-height:360px; }
+    .sidebar { padding:17px 11px; border-right:1px solid #334362; background:#1a2439; }
+    .nav-item { display:flex; align-items:center; gap:9px; margin-bottom:7px; padding:10px 11px; border-radius:7px; color:#9facbf; font-size:11px; }
+    .nav-item.active { color:#eef4ff; background:#263a62; box-shadow:inset 3px 0 var(--accent); }
+    .workspace { padding:18px; }
+    .workspace-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; }
+    .workspace-title strong { font-size:13px; }
+    .search { width:150px; height:24px; border:1px solid #334362; border-radius:6px; background:#0d1423; color:#6f819c; padding:5px 8px; font-size:9px; }
+    .project-grid { display:grid; grid-template-columns:155px 1fr; gap:11px; }
+    .project-list,.project-detail { border:1px solid #334362; border-radius:9px; background:#141d30; padding:8px; min-height:260px; }
+    .project-card { padding:9px; border-radius:6px; background:#1d2942; box-shadow:inset 3px 0 var(--accent); }
+    .project-card strong { display:block; font-size:10px; }
+    .project-card span { display:block; margin-top:5px; color:var(--accent); font-size:8px; }
+    .project-card small { display:block; margin-top:5px; color:#8799b3; font-size:7px; }
+    .project-detail h3 { margin:4px 4px 2px; font-size:14px; }
+    .namespace { margin:0 4px 12px; color:var(--accent); font-size:8px; }
+    .project-copy { margin:0 4px 15px; color:#91a1b8; font-size:8px; line-height:1.6; }
+    .runtime-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .runtime-action { display:grid; place-items:center; min-height:29px; border-radius:5px; background:var(--accent); color:#08101f; font-size:8px; font-weight:850; }
+    .runtime-action.alt { color:#eef4ff; background:#263650; }
+    .runtime-action.success { background:var(--success); }
+    .runtime-action.danger { grid-column:1/-1; background:var(--danger); }
+    .window-footer { display:flex; justify-content:space-between; padding:8px 14px; border-top:1px solid #334362; color:#8496b0; background:#0d1423; font-size:7px; }
+
+    .section { padding:42px 0; }
+    .section-heading { max-width:700px; margin-bottom:22px; }
+    .section-heading h2 { margin:0 0 10px; font-size:clamp(30px,5vw,48px); letter-spacing:-.035em; }
+    .section-heading p { margin:0; color:var(--muted); line-height:1.7; }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .feature { padding:21px; border:1px solid var(--line); border-radius:18px; background:var(--panel); }
+    .feature-icon { display:grid; place-items:center; width:36px; height:36px; margin-bottom:15px; border-radius:10px; background:linear-gradient(135deg,rgba(128,169,255,.2),rgba(140,125,255,.2)); color:var(--accent); font-weight:900; }
+    .feature h3 { margin:0 0 8px; font-size:16px; }
+    .feature p { margin:0; color:var(--muted); font-size:14px; line-height:1.65; }
+    .install-card { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--line); border-radius:24px; overflow:hidden; background:var(--panel); }
+    .install-copy,.compat { padding:28px; }
+    .compat { border-left:1px solid var(--line); background:var(--panel-2); }
+    .steps { counter-reset:step; display:grid; gap:14px; margin-top:20px; }
+    .step { position:relative; padding-left:42px; color:var(--muted); line-height:1.6; }
+    .step::before { counter-increment:step; content:counter(step); position:absolute; left:0; top:0; display:grid; place-items:center; width:28px; height:28px; border-radius:8px; color:#07101f; background:var(--accent); font-weight:900; }
+    .compat-list { display:grid; gap:10px; margin-top:18px; }
+    .compat-row { display:flex; justify-content:space-between; gap:12px; padding:12px 13px; border:1px solid var(--line); border-radius:11px; background:rgba(0,0,0,.12); color:var(--muted); font-size:14px; }
+    .compat-row b { color:var(--success); }
+    .notice { margin-top:16px; padding:14px 15px; border:1px solid rgba(255,210,141,.3); border-radius:12px; background:rgba(255,210,141,.06); color:#f1d5a7; font-size:13px; line-height:1.6; }
+    .download-panel { text-align:center; padding:46px 24px; border:1px solid var(--line); border-radius:24px; background:linear-gradient(135deg,rgba(128,169,255,.09),rgba(140,125,255,.08)); }
+    .download-panel h2 { margin:0 0 12px; font-size:36px; }
+    .download-panel p { max-width:660px; margin:0 auto 24px; color:var(--muted); line-height:1.7; }
+    .checksum { margin-top:14px; color:#72839d; font-size:11px; word-break:break-all; }
+    footer { padding-top:34px; color:#71829d; font-size:13px; text-align:center; }
+
+    @media (max-width:900px) {
+      .hero { grid-template-columns:1fr; }
+      .preview-wrap { width:min(650px,100%); margin:0 auto; }
+      .feature-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:640px) {
+      .shell { width:min(100% - 20px,1160px); }
+      .hero { padding-top:42px; gap:34px; }
+      .feature-grid,.install-card { grid-template-columns:1fr; }
+      .compat { border-left:0; border-top:1px solid var(--line); }
+      .runtime-window { transform:none; }
+      .window-body { grid-template-columns:100px 1fr; }
+      .sidebar { padding:12px 6px; }
+      .nav-item { padding:8px 6px; font-size:8px; }
+      .project-grid { grid-template-columns:1fr; }
+      .project-list { display:none; }
+      .search { display:none; }
+      .actions .button { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a class="back" href="index.html">← 返回 GameForge 工作室</a>
+      <span class="status-pill"><span class="status-dot"></span>Forge 构建已验证</span>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">GameForge Runtime · Preview 0.1.0</p>
+        <h1><span class="gradient">把所有作品，放进一个游戏内控制台。</span></h1>
+        <p class="lead">GameForge Runtime 是与网站配套的 Forge GUI。它自动识别作品 JAR，让玩家不用背诵 <code>/function</code>，按下 <b>G</b> 就能获取武器、召唤 Boss、运行诊断和清理生成物。</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.1.0/gameforge-runtime-1.20.1-0.1.0.jar">下载 Runtime JAR</a>
+          <a class="button secondary" href="#install">查看安装步骤</a>
+        </div>
+        <div class="meta">
+          <span><b>✓</b> Minecraft 1.20.1</span>
+          <span><b>✓</b> Forge 47.x</span>
+          <span><b>✓</b> Java 17+</span>
+          <span><b>✓</b> 中文 / English</span>
+        </div>
+      </div>
+
+      <div class="preview-wrap" aria-label="GameForge Runtime GUI 预览">
+        <div class="preview-glow"></div>
+        <div class="runtime-window">
+          <div class="window-bar">
+            <div class="window-brand"><span class="mini-logo">GF</span> GAMEFORGE RUNTIME</div>
+            <div class="window-version">1.20.1 · Forge 47.x</div>
+          </div>
+          <div class="window-body">
+            <aside class="sidebar">
+              <div class="nav-item active">▦ 我的作品</div>
+              <div class="nav-item">✓ 兼容诊断</div>
+              <div class="nav-item">? 安装帮助</div>
+            </aside>
+            <section class="workspace">
+              <div class="workspace-title"><strong>我的作品</strong><div class="search">搜索作品或命名空间…</div></div>
+              <div class="project-grid">
+                <div class="project-list">
+                  <div class="project-card"><strong>雷霆之刃</strong><span>gameforge</span><small>1 武器 · 1 配方</small></div>
+                </div>
+                <div class="project-detail">
+                  <h3>雷霆之刃</h3>
+                  <p class="namespace">命名空间 · gameforge</p>
+                  <p class="project-copy">由 GameForge 网站生成的低代码作品。选择操作后，Runtime 会在服务器安全执行白名单核心函数。</p>
+                  <div class="runtime-actions">
+                    <div class="runtime-action">打开项目菜单</div>
+                    <div class="runtime-action">获取全部内容</div>
+                    <div class="runtime-action alt">召唤全部</div>
+                    <div class="runtime-action success">运行诊断</div>
+                    <div class="runtime-action danger">清理生成物</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="window-footer"><span>按 G 可随时重新打开</span><span>Runtime 1.20.1-0.1.0</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>为 GameForge 作品而生</h2>
+        <p>这不是一个通用 Mod 菜单，而是网站、作品 JAR 和游戏之间的统一操作层。</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature"><div class="feature-icon">G</div><h3>按 G 打开</h3><p>进入世界后直接打开控制台，也可以在 Minecraft 按键设置中重新绑定。</p></article>
+        <article class="feature"><div class="feature-icon">⌕</div><h3>自动发现作品</h3><p>扫描作品 JAR 中的 GameForge 元数据，显示名称、命名空间和组件数量。</p></article>
+        <article class="feature"><div class="feature-icon">⚡</div><h3>无需记命令</h3><p>“获取全部”“召唤全部”“项目菜单”“诊断”“清理”全部变成按钮。</p></article>
+        <article class="feature"><div class="feature-icon">✓</div><h3>安全白名单</h3><p>服务端只执行 GameForge 预定义核心动作，不接受任意玩家命令文本。</p></article>
+        <article class="feature"><div class="feature-icon">◎</div><h3>兼容诊断</h3><p>集中显示 Minecraft、Forge、Runtime 和作品检测状态，方便定位安装问题。</p></article>
+        <article class="feature"><div class="feature-icon">中</div><h3>双语界面</h3><p>内置简体中文和英文语言文件，界面风格与 GameForge 网站保持一致。</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="install">
+      <div class="install-card">
+        <div class="install-copy">
+          <div class="section-heading"><h2>安装只需要几步</h2><p>Runtime 是独立的 Forge Mod，只安装一次，以后可管理多个 GameForge 作品。</p></div>
+          <div class="steps">
+            <div class="step">下载 <code>gameforge-runtime-1.20.1-0.1.0.jar</code>。</div>
+            <div class="step">把 Runtime JAR 放进 PCL 对应 1.20.1 Forge 实例的 <code>mods</code> 文件夹。</div>
+            <div class="step">把网站生成并转换好的作品 JAR 放进同一个 <code>mods</code> 文件夹。</div>
+            <div class="step">完全重启 Minecraft，进入世界后按 <b>G</b>。</div>
+          </div>
+        </div>
+        <div class="compat">
+          <div class="section-heading"><h2>兼容要求</h2><p>第一版专门针对目前网站的官方目标环境。</p></div>
+          <div class="compat-list">
+            <div class="compat-row"><span>Minecraft Java</span><b>1.20.1</b></div>
+            <div class="compat-row"><span>Mod Loader</span><b>Forge 47.x</b></div>
+            <div class="compat-row"><span>Java</span><b>17 或更高</b></div>
+            <div class="compat-row"><span>多人游戏</span><b>客户端 + 服务端</b></div>
+            <div class="compat-row"><span>作品格式</span><b>GameForge JAR</b></div>
+          </div>
+          <div class="notice">多人服务器中，客户端和服务端都需要安装相同版本的 Runtime；作品 JAR 也需要放在服务端。单机世界只需安装到当前 PCL 实例。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="download-panel">
+        <h2>准备好进入游戏了吗？</h2>
+        <p>Runtime 源码已通过 GitHub Actions 使用 Java 17 和 Forge 47.4.21 构建，生成的 JAR 也完成压缩包结构校验。</p>
+        <a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.1.0/gameforge-runtime-1.20.1-0.1.0.jar">下载 GameForge Runtime GUI</a>
+        <div class="checksum">SHA-256: 6092a7af6571c82eb4848d5b6998e0f0fec553d50ed7a505255b3615bc75e53f</div>
+      </div>
+    </section>
+
+    <footer>GameForge Runtime 0.1.0 Preview · MIT License · 与 GameForge Lite 2.1.1 配套</footer>
+  </main>
+</body>
+</html>
