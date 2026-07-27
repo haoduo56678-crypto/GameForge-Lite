@@ -1,0 +1,22 @@
+{
+  "key.categories.gameforge_runtime": "GameForge Runtime",
+  "key.gameforge_runtime.open": "打开 GameForge 控制台",
+  "screen.gameforge_runtime.title": "GameForge Runtime",
+  "screen.gameforge_runtime.projects": "我的作品",
+  "screen.gameforge_runtime.diagnostics": "兼容诊断",
+  "screen.gameforge_runtime.help": "安装帮助",
+  "screen.gameforge_runtime.search": "搜索作品或命名空间…",
+  "screen.gameforge_runtime.empty": "没有检测到 GameForge 作品 JAR",
+  "screen.gameforge_runtime.empty_hint": "先用网站生成作品，并把作品 JAR 放进 mods 文件夹。",
+  "screen.gameforge_runtime.menu": "打开项目菜单",
+  "screen.gameforge_runtime.get_all": "获取全部内容",
+  "screen.gameforge_runtime.spawn_all": "召唤全部",
+  "screen.gameforge_runtime.doctor": "运行诊断",
+  "screen.gameforge_runtime.cleanup": "清理生成物",
+  "screen.gameforge_runtime.refresh": "重新扫描",
+  "screen.gameforge_runtime.close": "关闭",
+  "message.gameforge_runtime.sent": "已向服务器发送 GameForge 操作：%s",
+  "message.gameforge_runtime.missing_project": "服务器未识别该 GameForge 作品：%s",
+  "message.gameforge_runtime.missing_function": "作品缺少运行函数：%s",
+  "message.gameforge_runtime.executed": "已执行：%s"
+}
