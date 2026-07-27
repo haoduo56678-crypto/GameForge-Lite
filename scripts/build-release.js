@@ -32,6 +32,7 @@ const REQUIRED_FILES = [
   'jar.html',
   'jar-builder.js',
   'jar-entry.js',
+  'local-vocabulary.js',
   'core-mechanisms.js',
 ];
 
@@ -40,9 +41,10 @@ const TEST_REPORT = [
   '',
   'Validated before release:',
   '',
-  '- JavaScript syntax checks passed for the original app, ZIP → JAR converter, and core runtime extension.',
+  '- JavaScript syntax checks passed for the original app, ZIP → JAR converter, local vocabulary engine, and core runtime extension.',
   '- `manifest.webmanifest` parsed successfully.',
   '- Browser self-tests passed for project generation, JSON, namespace handling, textures, ZIP, Forge source, game menu, trigger actions, passive weapons, and component discovery.',
+  '- The local vocabulary engine contains 386 semantic concepts and more than 4,500 direct aliases across items, entities, worlds, dimensions, biomes, terrain, weather, structures, rules, events, quests, magic, technology, effects, styles, and Minecraft terminology.',
   '- The core runtime generates first-join initialization, non-operator `/trigger` menus, recipe unlocking, obtain/spawn/cleanup/doctor functions, and component action wrappers.',
   '- ZIP → JAR validates GameForge bundle structure and emits a Forge 1.20.1 `lowcodefml` JAR locally in the browser.',
   '',
@@ -111,22 +113,37 @@ function copyDirectory(source, target) {
   }
 }
 
-function unpackCoreMechanisms() {
-  const packedPath = path.join(OUT_DIR, 'core-mechanisms.js.gz.b64');
-  if (!fs.existsSync(packedPath)) throw new Error('Missing packaged core runtime extension.');
+function unpackCompressedJavaScript(packedName, outputName, markers) {
+  const packedPath = path.join(OUT_DIR, packedName);
+  if (!fs.existsSync(packedPath)) throw new Error(`Missing packaged extension: ${packedName}`);
   const encoded = fs.readFileSync(packedPath, 'utf8').replace(/\s+/g, '');
   const source = zlib.gunzipSync(Buffer.from(encoded, 'base64')).toString('utf8');
-  if (!source.includes('Gen.__coreMechanismsInstalled = true')) throw new Error('Core runtime package failed integrity marker check.');
-  fs.writeFileSync(path.join(OUT_DIR, 'core-mechanisms.js'), source, 'utf8');
+  for (const marker of markers) {
+    if (!source.includes(marker)) throw new Error(`${outputName} failed integrity marker check: ${marker}`);
+  }
+  fs.writeFileSync(path.join(OUT_DIR, outputName), source, 'utf8');
   fs.rmSync(packedPath, { force: true });
 }
 
 function installExtensions() {
   copyDirectory(EXTRAS_DIR, OUT_DIR);
-  unpackCoreMechanisms();
+  unpackCompressedJavaScript('core-mechanisms.js.gz.b64', 'core-mechanisms.js', [
+    'Gen.__coreMechanismsInstalled = true',
+    'gameforge/player_init.mcfunction',
+  ]);
+  unpackCompressedJavaScript('local-vocabulary.js.gz.b64', 'local-vocabulary.js', [
+    'GameForgeVocabulary',
+    'domain_world',
+    'weather_acid',
+    'style_cyberpunk',
+  ]);
+
+  fs.rmSync(path.join(OUT_DIR, 'core-runtime'), { recursive: true, force: true });
+  fs.rmSync(path.join(OUT_DIR, 'vocabulary'), { recursive: true, force: true });
 
   const indexPath = path.join(OUT_DIR, 'index.html');
   let index = fs.readFileSync(indexPath, 'utf8');
+  const vocabularyTag = '<script src="local-vocabulary.js"></script>';
   const coreTag = '<script src="core-mechanisms.js"></script>';
   const appTag = '<script src="js/app.js"></script>';
   const jarEntryTag = '<script src="jar-entry.js" defer></script>';
@@ -134,6 +151,10 @@ function installExtensions() {
   if (!index.includes(coreTag)) {
     if (!index.includes(appTag)) throw new Error('index.html does not contain the app script marker.');
     index = index.replace(appTag, `  ${coreTag}\n  ${appTag}`);
+  }
+  if (!index.includes(vocabularyTag)) {
+    if (!index.includes(coreTag)) throw new Error('index.html does not contain the core extension marker.');
+    index = index.replace(coreTag, `  ${vocabularyTag}\n  ${coreTag}`);
   }
   if (!index.includes(jarEntryTag)) {
     if (!index.includes('</body>')) throw new Error('index.html does not contain </body>.');
@@ -154,6 +175,7 @@ function validateSite() {
     'sw.js',
     'jar-builder.js',
     'jar-entry.js',
+    'local-vocabulary.js',
     'core-mechanisms.js',
   ]) {
     execFileSync(process.execPath, ['--check', path.join(OUT_DIR, relativePath)], { stdio: 'inherit' });
@@ -161,11 +183,37 @@ function validateSite() {
 
   JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'manifest.webmanifest'), 'utf8'));
   const index = fs.readFileSync(path.join(OUT_DIR, 'index.html'), 'utf8');
-  for (const reference of ['styles.css', 'js/core.js', 'js/generators.js', 'core-mechanisms.js', 'js/app.js', 'jar-entry.js']) {
+  for (const reference of [
+    'styles.css',
+    'js/core.js',
+    'js/generators.js',
+    'local-vocabulary.js',
+    'core-mechanisms.js',
+    'js/app.js',
+    'jar-entry.js',
+  ]) {
     if (!index.includes(reference)) throw new Error(`index.html is missing reference: ${reference}`);
+  }
+  if (index.indexOf('local-vocabulary.js') > index.indexOf('core-mechanisms.js')) {
+    throw new Error('Local vocabulary must load before the core mechanisms extension.');
+  }
+  if (index.indexOf('local-vocabulary.js') > index.indexOf('js/app.js')) {
+    throw new Error('Local vocabulary must load before the app initializes.');
   }
   if (index.indexOf('core-mechanisms.js') > index.indexOf('js/app.js')) {
     throw new Error('Core mechanisms must load before the app initializes.');
+  }
+
+  const vocabularySource = fs.readFileSync(path.join(OUT_DIR, 'local-vocabulary.js'), 'utf8');
+  for (const marker of [
+    '386 concepts',
+    'domain_world',
+    'domain_dimension',
+    'weather_acid',
+    'style_cyberpunk',
+    'GameForgeVocabulary',
+  ]) {
+    if (!vocabularySource.includes(marker)) throw new Error(`Local vocabulary is missing marker: ${marker}`);
   }
 
   const coreSource = fs.readFileSync(path.join(OUT_DIR, 'core-mechanisms.js'), 'utf8');
@@ -213,7 +261,7 @@ function build() {
 
   console.log(`GameForge Lite 2.1.1 built successfully from ${partNames.length} verified chunks.`);
   console.log(`Extracted ${extracted} archive files to ${OUT_DIR}.`);
-  console.log('Installed ZIP → JAR converter and complete game-side core runtime mechanisms.');
+  console.log('Installed local vocabulary, ZIP → JAR converter, and complete game-side core runtime mechanisms.');
 }
 
 try {
