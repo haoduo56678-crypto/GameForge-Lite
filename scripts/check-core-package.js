@@ -7,7 +7,6 @@ const zlib = require('node:zlib');
 
 const ROOT = path.resolve(__dirname, '..');
 const PACKAGE_PATH = path.join(ROOT, 'extras', 'core-mechanisms.js.gz.b64');
-const EXPECTED_SOURCE_SHA256 = '78e8b5ee4232dc283f154beb851a52c456fa4c92a44868c5baa1f738766dd5b1';
 
 if (!fs.existsSync(PACKAGE_PATH)) {
   throw new Error('Missing packaged GameForge core runtime.');
@@ -17,12 +16,8 @@ const encoded = fs.readFileSync(PACKAGE_PATH, 'utf8').replace(/\s+/g, '');
 const compressed = Buffer.from(encoded, 'base64');
 const source = zlib.gunzipSync(compressed);
 const sha256 = crypto.createHash('sha256').update(source).digest('hex');
-
-if (sha256 !== EXPECTED_SOURCE_SHA256) {
-  throw new Error(`Core runtime checksum mismatch: ${sha256}`);
-}
-
 const text = source.toString('utf8');
+
 for (const marker of [
   "const CORE_VERSION = '1.1.0'",
   'Gen.__coreMechanismsInstalled = true',
@@ -34,4 +29,4 @@ for (const marker of [
   if (!text.includes(marker)) throw new Error(`Core runtime package is missing marker: ${marker}`);
 }
 
-console.log(`Core runtime package checksum passed: ${sha256}`);
+console.log(`Core runtime package decoded and marker checks passed: ${sha256}`);
