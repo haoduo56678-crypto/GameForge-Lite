@@ -206,7 +206,8 @@ function validateSite() {
 
   const vocabularySource = fs.readFileSync(path.join(OUT_DIR, 'local-vocabulary.js'), 'utf8');
   for (const marker of [
-    '386 concepts',
+    "const VERSION = '1.0.0'",
+    'productivePhraseEstimate',
     'domain_world',
     'domain_dimension',
     'weather_acid',
