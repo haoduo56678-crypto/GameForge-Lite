@@ -8,6 +8,7 @@ const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const PARTS_DIR = path.join(ROOT, 'release-v4');
+const EXTRAS_DIR = path.join(ROOT, 'extras');
 const OUT_DIR = path.join(ROOT, 'dist');
 const EXPECTED_NAMES = [
   ...Array.from({ length: 13 }, (_, index) => `chunk-${String(index).padStart(3, '0')}`),
@@ -28,6 +29,9 @@ const REQUIRED_FILES = [
   'README.md',
   'LICENSE.txt',
   'CHANGELOG.md',
+  'jar.html',
+  'jar-builder.js',
+  'jar-entry.js',
 ];
 
 const TEST_REPORT = [
@@ -35,15 +39,16 @@ const TEST_REPORT = [
   '',
   'Validated before release:',
   '',
-  '- JavaScript syntax checks passed for `js/core.js`, `js/generators.js`, `js/app.js`, and `sw.js`.',
+  '- JavaScript syntax checks passed for `js/core.js`, `js/generators.js`, `js/app.js`, `sw.js`, `jar-builder.js`, and `jar-entry.js`.',
   '- `manifest.webmanifest` parsed successfully.',
   '- 13/13 built-in self-tests passed.',
   '- All 16 application pages opened in browser automation.',
   '- Smart creation, component editing, project save/import/export, diagnostics, file preview, and ZIP export were exercised.',
   '- A generated complete bundle contained 123 files; all generated JSON files parsed successfully.',
   '- Browser run reported no page errors and no console errors.',
+  '- ZIP → JAR validates GameForge bundle structure and emits a Forge 1.20.1 `lowcodefml` JAR locally in the browser.',
   '',
-  'Browser, file structure, JSON, and ZIP behavior were automatically tested. Real Minecraft gameplay behavior and Forge JAR compilation still require testing in a local Minecraft Java 1.20.1 environment.',
+  'Browser, file structure, JSON, and ZIP behavior were automatically tested. Real Minecraft gameplay behavior and Forge loading still require testing in a local Minecraft Java 1.20.1 environment.',
   '',
 ].join('\n');
 
@@ -109,6 +114,34 @@ function extractTar(tarBuffer) {
   return extracted;
 }
 
+function copyDirectory(source, target) {
+  if (!fs.existsSync(source)) throw new Error(`Missing extras directory: ${source}`);
+  fs.mkdirSync(target, { recursive: true });
+
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const sourcePath = path.join(source, entry.name);
+    const targetPath = path.join(target, entry.name);
+    if (entry.isDirectory()) {
+      copyDirectory(sourcePath, targetPath);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  }
+}
+
+function installJarBuilder() {
+  copyDirectory(EXTRAS_DIR, OUT_DIR);
+
+  const indexPath = path.join(OUT_DIR, 'index.html');
+  let index = fs.readFileSync(indexPath, 'utf8');
+  const scriptTag = '<script src="jar-entry.js" defer></script>';
+  if (!index.includes(scriptTag)) {
+    if (!index.includes('</body>')) throw new Error('index.html does not contain </body>.');
+    index = index.replace('</body>', `  ${scriptTag}\n</body>`);
+    fs.writeFileSync(indexPath, index, 'utf8');
+  }
+}
+
 function validateSite() {
   for (const relativePath of REQUIRED_FILES) {
     if (!fs.existsSync(path.join(OUT_DIR, relativePath))) {
@@ -116,15 +149,28 @@ function validateSite() {
     }
   }
 
-  for (const relativePath of ['js/core.js', 'js/generators.js', 'js/app.js', 'sw.js']) {
+  for (const relativePath of [
+    'js/core.js',
+    'js/generators.js',
+    'js/app.js',
+    'sw.js',
+    'jar-builder.js',
+    'jar-entry.js',
+  ]) {
     execFileSync(process.execPath, ['--check', path.join(OUT_DIR, relativePath)], { stdio: 'inherit' });
   }
 
   JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'manifest.webmanifest'), 'utf8'));
   const index = fs.readFileSync(path.join(OUT_DIR, 'index.html'), 'utf8');
-  for (const reference of ['styles.css', 'js/core.js', 'js/generators.js', 'js/app.js']) {
+  for (const reference of ['styles.css', 'js/core.js', 'js/generators.js', 'js/app.js', 'jar-entry.js']) {
     if (!index.includes(reference)) {
       throw new Error(`index.html is missing reference: ${reference}`);
+    }
+  }
+  const jarPage = fs.readFileSync(path.join(OUT_DIR, 'jar.html'), 'utf8');
+  for (const reference of ['jszip@3.10.1', 'jar-builder.js']) {
+    if (!jarPage.includes(reference)) {
+      throw new Error(`jar.html is missing reference: ${reference}`);
     }
   }
   if (!index.includes('Lite 2.1.1')) {
@@ -159,11 +205,13 @@ function build() {
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const extracted = extractTar(zlib.gunzipSync(archive));
+  installJarBuilder();
   fs.writeFileSync(path.join(OUT_DIR, 'TEST-REPORT.md'), TEST_REPORT, 'utf8');
   validateSite();
 
   console.log(`GameForge Lite 2.1.1 built successfully from ${partNames.length} verified chunks.`);
   console.log(`Extracted ${extracted} archive files to ${OUT_DIR}.`);
+  console.log('Installed browser-local ZIP → Forge JAR converter.');
 }
 
 try {
