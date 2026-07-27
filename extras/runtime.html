@@ -3,82 +3,206 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GameForge Runtime GUI 0.2.0 · 内容与配方浏览器</title>
-  <meta name="description" content="下载 GameForge Runtime GUI 0.2.0，在 Minecraft Forge 1.20.1 中像 JEI 一样浏览、搜索和获取 GameForge 作品内容。">
+  <title>GameForge Runtime GUI 0.2.1 · 响应式内容浏览器</title>
+  <meta name="description" content="下载 GameForge Runtime GUI 0.2.1，在 Minecraft Forge 1.20.1 中以响应式 JEI 风格浏览、搜索和获取 GameForge 作品内容。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     :root {
       color-scheme: dark;
-      --bg:#080c17; --panel:rgba(17,24,41,.94); --panel2:rgba(26,36,57,.9);
-      --card:#1d2942; --line:rgba(147,178,238,.2); --text:#eef4ff; --muted:#9facbf;
-      --accent:#80a9ff; --purple:#8c7dff; --success:#77e2ac; --warning:#ffd28d;
+      --bg:#080c17;
+      --panel:rgba(17,24,41,.94);
+      --panel-2:rgba(26,36,57,.9);
+      --card:#1d2942;
+      --line:rgba(147,178,238,.2);
+      --text:#eef4ff;
+      --muted:#9facbf;
+      --accent:#80a9ff;
+      --purple:#8c7dff;
+      --success:#77e2ac;
+      --warning:#ffd28d;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
-    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 18% 0%,rgba(84,117,225,.24),transparent 36rem),radial-gradient(circle at 88% 14%,rgba(127,87,223,.2),transparent 32rem),var(--bg)}
-    a{color:inherit} code{color:#c7d8ff}.shell{width:min(1160px,calc(100% - 32px));margin:0 auto;padding:26px 0 72px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}.back{color:var(--muted);text-decoration:none;font-weight:750}.back:hover{color:var(--text)}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:999px;color:#d4def0;background:rgba(255,255,255,.035);font-size:13px}.dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 16px var(--success)}
-    .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(440px,.95fr);gap:48px;align-items:center;padding:64px 0 48px}.eyebrow{margin:0 0 14px;color:var(--accent);font-size:13px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}h1{margin:0;font-size:clamp(43px,7vw,82px);line-height:.97;letter-spacing:-.055em}.gradient{background:linear-gradient(120deg,#fff 5%,#a9c5ff 44%,#a89cff 92%);-webkit-background-clip:text;color:transparent}.lead{max-width:680px;margin:22px 0 0;color:var(--muted);font-size:18px;line-height:1.75}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:15px;font-size:15px;font-weight:850;text-decoration:none;transition:.18s ease}.button:hover{transform:translateY(-2px)}.primary{color:#07101f;background:linear-gradient(135deg,var(--accent),#b099ff);box-shadow:0 14px 35px rgba(78,112,221,.3)}.secondary{border:1px solid var(--line);background:rgba(255,255,255,.035)}.meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:20px;color:var(--muted);font-size:13px}.meta b{color:var(--success)}
-    .preview-wrap{position:relative}.preview-glow{position:absolute;inset:12%;border-radius:50%;background:rgba(91,112,255,.3);filter:blur(70px)}.window{position:relative;border:1px solid rgba(149,181,255,.28);border-radius:22px;overflow:hidden;background:#111829;box-shadow:0 34px 90px rgba(0,0,0,.5);transform:perspective(1200px) rotateY(-4deg) rotateX(1.5deg)}.bar{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid #334362;background:#0d1423}.brand{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:850;letter-spacing:.1em}.logo{display:grid;place-items:center;width:26px;height:26px;border:2px solid var(--purple);color:var(--accent);font-size:10px}.version{color:#8fa1bb;font-size:10px}.body{display:grid;grid-template-columns:120px 1fr;min-height:370px}.side{padding:15px 9px;border-right:1px solid #334362;background:#1a2439}.nav{margin-bottom:7px;padding:9px;border-radius:7px;color:#9facbf;font-size:9px}.nav.active{color:#eef4ff;background:#263a62;box-shadow:inset 3px 0 var(--accent)}.work{padding:15px}.search{height:25px;margin-bottom:10px;border:1px solid #334362;border-radius:6px;background:#0d1423;color:#7588a4;padding:6px 9px;font-size:8px}.categories{display:flex;gap:5px;margin-bottom:10px}.cat{padding:5px 7px;border-radius:4px;background:#263650;color:#aebbd0;font-size:7px}.cat.active{background:var(--accent);color:#08101f}.browser{display:grid;grid-template-columns:1fr 160px;gap:9px}.grid,.detail{min-height:260px;border:1px solid #334362;border-radius:8px;background:#141d30;padding:8px}.items{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.item{display:grid;place-items:center;min-height:47px;border-radius:5px;background:#1d2942;color:#9facbf;font-size:7px;text-align:center}.item.selected{background:#263a62;box-shadow:inset 0 2px var(--accent)}.item-icon{font-size:18px}.detail h3{margin:4px 0 3px;font-size:12px}.detail .id{color:var(--accent);font-size:7px}.stats{margin:10px 0;color:#9facbf;font-size:7px;line-height:1.7}.mini-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mini-button{display:grid;place-items:center;min-height:25px;border-radius:4px;background:var(--accent);color:#07101f;font-size:7px;font-weight:850}.mini-button.alt{background:#263650;color:#eef4ff}.mini-button.good{background:var(--success)}.footerbar{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid #334362;color:#8496b0;background:#0d1423;font-size:7px}
-    .section{padding:42px 0}.heading{max-width:760px;margin-bottom:22px}.heading h2{margin:0 0 10px;font-size:clamp(30px,5vw,48px);letter-spacing:-.035em}.heading p{margin:0;color:var(--muted);line-height:1.7}.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.feature{padding:21px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}.icon{display:grid;place-items:center;width:36px;height:36px;margin-bottom:15px;border-radius:10px;background:linear-gradient(135deg,rgba(128,169,255,.2),rgba(140,125,255,.2));color:var(--accent);font-weight:900}.feature h3{margin:0 0 8px;font-size:16px}.feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}
-    .install{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--panel)}.install>div{padding:28px}.compat{border-left:1px solid var(--line);background:var(--panel2)}.steps{counter-reset:step;display:grid;gap:14px;margin-top:20px}.step{position:relative;padding-left:42px;color:var(--muted);line-height:1.6}.step:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:#07101f;background:var(--accent);font-weight:900}.rows{display:grid;gap:10px;margin-top:18px}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.12);color:var(--muted);font-size:14px}.row b{color:var(--success)}.notice{margin-top:16px;padding:14px 15px;border:1px solid rgba(255,210,141,.3);border-radius:12px;background:rgba(255,210,141,.06);color:#f1d5a7;font-size:13px;line-height:1.6}.download{text-align:center;padding:46px 24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,rgba(128,169,255,.09),rgba(140,125,255,.08))}.download h2{margin:0 0 12px;font-size:36px}.download p{max-width:700px;margin:0 auto 24px;color:var(--muted);line-height:1.7}.verified{margin-top:14px;color:#7f92ad;font-size:12px}footer{padding-top:34px;color:#71829d;font-size:13px;text-align:center}
-    @media(max-width:900px){.hero{grid-template-columns:1fr}.preview-wrap{width:min(680px,100%);margin:auto}.features{grid-template-columns:1fr 1fr}}@media(max-width:640px){.shell{width:min(100% - 20px,1160px)}.hero{padding-top:42px;gap:34px}.features,.install{grid-template-columns:1fr}.compat{border-left:0;border-top:1px solid var(--line)}.window{transform:none}.body{grid-template-columns:88px 1fr}.browser{grid-template-columns:1fr}.detail{display:none}.items{grid-template-columns:repeat(3,1fr)}.actions .button{width:100%}}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 18% 0%,rgba(84,117,225,.24),transparent 36rem),radial-gradient(circle at 88% 14%,rgba(127,87,223,.2),transparent 32rem),var(--bg)}
+    a{color:inherit}
+    code{color:#c7d8ff}
+    .shell{width:min(1160px,calc(100% - 32px));margin:0 auto;padding:26px 0 72px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .back{color:var(--muted);text-decoration:none;font-weight:750}
+    .back:hover{color:var(--text)}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:999px;color:#d4def0;background:rgba(255,255,255,.035);font-size:13px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 16px var(--success)}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(430px,.95fr);gap:48px;align-items:center;padding:64px 0 48px}
+    .eyebrow{margin:0 0 14px;color:var(--accent);font-size:13px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:0;font-size:clamp(43px,7vw,82px);line-height:.97;letter-spacing:-.055em}
+    .gradient{background:linear-gradient(120deg,#fff 5%,#a9c5ff 44%,#a89cff 92%);-webkit-background-clip:text;color:transparent}
+    .lead{max-width:690px;margin:22px 0 0;color:var(--muted);font-size:18px;line-height:1.75}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+    .button{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:15px;font-size:15px;font-weight:850;text-decoration:none;transition:.18s ease}
+    .button:hover{transform:translateY(-2px)}
+    .primary{color:#07101f;background:linear-gradient(135deg,var(--accent),#b099ff);box-shadow:0 14px 35px rgba(78,112,221,.3)}
+    .secondary{border:1px solid var(--line);background:rgba(255,255,255,.035)}
+    .meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:20px;color:var(--muted);font-size:13px}
+    .meta b{color:var(--success)}
+
+    .preview-wrap{position:relative}
+    .preview-glow{position:absolute;inset:12%;border-radius:50%;background:rgba(91,112,255,.3);filter:blur(70px)}
+    .window{position:relative;border:1px solid rgba(149,181,255,.28);border-radius:22px;overflow:hidden;background:#111829;box-shadow:0 34px 90px rgba(0,0,0,.5);transform:perspective(1200px) rotateY(-4deg) rotateX(1.5deg)}
+    .bar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #334362;background:#0d1423}
+    .brand{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:850;letter-spacing:.08em}
+    .logo{display:grid;place-items:center;width:25px;height:25px;border:2px solid var(--purple);color:var(--accent);font-size:9px}
+    .version{color:#8fa1bb;font-size:9px}
+    .runtime-body{display:grid;grid-template-columns:96px 1fr;min-height:350px}
+    .rail{padding:12px 7px;border-right:1px solid #334362;background:#1a2439}
+    .nav{margin-bottom:6px;padding:8px 7px;border-radius:6px;color:#9facbf;font-size:8px}
+    .nav.active{color:#eef4ff;background:#263a62;box-shadow:inset 3px 0 var(--accent)}
+    .work{padding:12px}
+    .search{height:23px;margin-bottom:8px;border:1px solid #334362;border-radius:5px;background:#0d1423;color:#7588a4;padding:5px 8px;font-size:8px}
+    .categories{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px}
+    .cat{display:grid;place-items:center;min-height:20px;border-radius:4px;background:#263650;color:#aebbd0;font-size:6px}
+    .cat.active{background:var(--accent);color:#08101f}
+    .grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;min-height:205px;padding:7px;border:1px solid #334362;border-radius:7px;background:#141d30;align-content:start}
+    .item{display:grid;place-items:center;min-height:31px;border-radius:4px;background:#1d2942;color:#9facbf;font-size:7px}
+    .item.selected{background:#263a62;box-shadow:inset 0 2px var(--accent),inset 2px 0 var(--purple)}
+    .item-icon{font-size:15px}
+    .selected-bar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:7px;padding:8px;border-top:2px solid var(--purple);border-radius:5px;background:#141d30}
+    .selected-info strong{display:block;font-size:9px}
+    .selected-info span{display:block;margin-top:4px;color:#8294ae;font-size:7px}
+    .quick-actions{display:flex;gap:4px}
+    .quick{display:grid;place-items:center;min-width:42px;min-height:25px;border-radius:4px;background:#263650;color:#eef4ff;font-size:7px;font-weight:800}
+    .quick.primary{background:var(--accent);color:#07101f;box-shadow:none}
+    .quick.good{background:var(--success);color:#07101f}
+    .footerbar{display:flex;justify-content:space-between;padding:7px 12px;border-top:1px solid #334362;color:#8496b0;background:#0d1423;font-size:7px}
+
+    .section{padding:42px 0}
+    .heading{max-width:760px;margin-bottom:22px}
+    .heading h2{margin:0 0 10px;font-size:clamp(30px,5vw,48px);letter-spacing:-.035em}
+    .heading p{margin:0;color:var(--muted);line-height:1.7}
+    .features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .feature{padding:21px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+    .icon{display:grid;place-items:center;width:36px;height:36px;margin-bottom:15px;border-radius:10px;background:linear-gradient(135deg,rgba(128,169,255,.2),rgba(140,125,255,.2));color:var(--accent);font-weight:900}
+    .feature h3{margin:0 0 8px;font-size:16px}
+    .feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}
+    .install{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--panel)}
+    .install>div{padding:28px}
+    .compat{border-left:1px solid var(--line);background:var(--panel-2)}
+    .steps{counter-reset:step;display:grid;gap:14px;margin-top:20px}
+    .step{position:relative;padding-left:42px;color:var(--muted);line-height:1.6}
+    .step:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:#07101f;background:var(--accent);font-weight:900}
+    .rows{display:grid;gap:10px;margin-top:18px}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.12);color:var(--muted);font-size:14px}
+    .row b{color:var(--success)}
+    .notice{margin-top:16px;padding:14px 15px;border:1px solid rgba(255,210,141,.3);border-radius:12px;background:rgba(255,210,141,.06);color:#f1d5a7;font-size:13px;line-height:1.6}
+    .download{text-align:center;padding:46px 24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,rgba(128,169,255,.09),rgba(140,125,255,.08))}
+    .download h2{margin:0 0 12px;font-size:36px}
+    .download p{max-width:700px;margin:0 auto 24px;color:var(--muted);line-height:1.7}
+    .verified{margin-top:14px;color:#7f92ad;font-size:12px}
+    footer{padding-top:34px;color:#71829d;font-size:13px;text-align:center}
+    @media(max-width:900px){.hero{grid-template-columns:1fr}.preview-wrap{width:min(680px,100%);margin:auto}.features{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.shell{width:min(100% - 20px,1160px)}.hero{padding-top:42px;gap:34px}.features,.install{grid-template-columns:1fr}.compat{border-left:0;border-top:1px solid var(--line)}.window{transform:none}.runtime-body{grid-template-columns:78px 1fr}.grid{grid-template-columns:repeat(5,1fr)}.categories{grid-template-columns:repeat(4,1fr)}.actions .button{width:100%}}
   </style>
 </head>
 <body>
   <main class="shell">
-    <div class="topbar"><a class="back" href="index.html">← 返回 GameForge 工作室</a><span class="pill"><span class="dot"></span>Runtime 0.2.0 构建已验证</span></div>
+    <div class="topbar">
+      <a class="back" href="index.html">← 返回 GameForge 工作室</a>
+      <span class="pill"><span class="dot"></span>Runtime 0.2.1 构建已验证</span>
+    </div>
 
     <section class="hero">
       <div>
-        <p class="eyebrow">GameForge Runtime GUI · Content Browser 0.2.0</p>
-        <h1><span class="gradient">像 JEI 一样，浏览你创造的所有内容。</span></h1>
-        <p class="lead">按 <b>G</b> 打开 GameForge 内容浏览器：搜索武器、物品、方块、生物和 Boss，查看属性与九宫格配方，并一键获取或召唤。它专门识别网站生成的作品 JAR，并可与真正的 JEI 同时安装。</p>
+        <p class="eyebrow">GameForge Runtime GUI · Responsive Browser 0.2.1</p>
+        <h1><span class="gradient">高界面缩放，也不会再挤成一团。</span></h1>
+        <p class="lead">Runtime 会根据 Minecraft 的逻辑屏幕尺寸自动切换布局。普通比例保留完整双栏界面；GUI Scale 较高时，自动改为紧凑的 JEI 式图标网格、底部操作条和独立详情／配方页面。</p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.2.0/gameforge-runtime-1.20.1-0.2.0.jar">下载 Runtime 0.2.0 JAR</a>
+          <a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.2.1/gameforge-runtime-1.20.1-0.2.1.jar">下载 Runtime 0.2.1 JAR</a>
           <a class="button secondary" href="#install">查看安装步骤</a>
         </div>
-        <div class="meta"><span><b>✓</b> Minecraft 1.20.1</span><span><b>✓</b> Forge 47.x</span><span><b>✓</b> Java 17+</span><span><b>✓</b> 可与 JEI 共存</span></div>
+        <div class="meta">
+          <span><b>✓</b> Minecraft 1.20.1</span>
+          <span><b>✓</b> Forge 47.x</span>
+          <span><b>✓</b> Java 17+</span>
+          <span><b>✓</b> 自动适配 GUI Scale</span>
+        </div>
       </div>
 
-      <div class="preview-wrap" aria-label="GameForge 内容浏览器预览">
+      <div class="preview-wrap" aria-label="GameForge Runtime 0.2.1 紧凑界面预览">
         <div class="preview-glow"></div>
         <div class="window">
-          <div class="bar"><div class="brand"><span class="logo">GF</span> GAMEFORGE RUNTIME</div><div class="version">0.2.0 · Forge 47.x</div></div>
-          <div class="body">
-            <aside class="side"><div class="nav active">▦ 内容浏览</div><div class="nav">◆ 我的作品</div><div class="nav">✓ 兼容诊断</div><div class="nav">? 使用帮助</div></aside>
+          <div class="bar"><div class="brand"><span class="logo">GF</span> GAMEFORGE RUNTIME</div><div class="version">0.2.1 · COMPACT</div></div>
+          <div class="runtime-body">
+            <aside class="rail">
+              <div class="nav active">▦ 内容浏览</div>
+              <div class="nav">◆ 我的作品</div>
+              <div class="nav">✓ 诊断</div>
+              <div class="nav">? 帮助</div>
+            </aside>
             <section class="work">
               <div class="search">搜索名称、ID、效果、材料或作品…</div>
-              <div class="categories"><span class="cat active">全部</span><span class="cat">武器</span><span class="cat">物品</span><span class="cat">方块</span><span class="cat">Boss</span></div>
-              <div class="browser">
-                <div class="grid"><div class="items"><div class="item selected"><span class="item-icon">⚔</span>亡灵剑</div><div class="item"><span class="item-icon">⚡</span>雷霆之刃</div><div class="item"><span class="item-icon">◆</span>传送核心</div><div class="item"><span class="item-icon">☠</span>沙漠猎手</div><div class="item"><span class="item-icon">▣</span>暗影砖</div><div class="item"><span class="item-icon">★</span>亡灵 Boss</div></div></div>
-                <div class="detail"><h3>亡灵剑</h3><div class="id">gameforge:custom_sword</div><div class="stats">攻击伤害：12<br>攻击速度：1.6<br>冷却：5 秒<br>附魔光效：开启<br>包含合成配方</div><div class="mini-actions"><div class="mini-button">获取此物品</div><div class="mini-button good">查看配方</div><div class="mini-button alt">项目菜单</div><div class="mini-button alt">运行诊断</div></div></div>
+              <div class="categories"><span class="cat active">全部</span><span class="cat">武器</span><span class="cat">物品</span><span class="cat">方块</span><span class="cat">生物</span><span class="cat">Boss</span><span class="cat">配方</span></div>
+              <div class="grid">
+                <div class="item selected"><span class="item-icon">⚔</span></div><div class="item"><span class="item-icon">⚡</span></div><div class="item"><span class="item-icon">◆</span></div><div class="item"><span class="item-icon">☠</span></div><div class="item"><span class="item-icon">▣</span></div><div class="item"><span class="item-icon">★</span></div><div class="item"><span class="item-icon">🍎</span></div><div class="item"><span class="item-icon">◇</span></div>
+              </div>
+              <div class="selected-bar">
+                <div class="selected-info"><strong>亡灵剑</strong><span>gameforge:custom_sword</span></div>
+                <div class="quick-actions"><span class="quick primary">获取</span><span class="quick good">配方</span><span class="quick">详情</span></div>
               </div>
             </section>
           </div>
-          <div class="footerbar"><span>按 G 可随时重新打开</span><span>Runtime 1.20.1-0.2.0</span></div>
+          <div class="footerbar"><span>内容、按钮和版本信息互不重叠</span><span>GF 0.2.1</span></div>
         </div>
       </div>
     </section>
 
-    <section class="section"><div class="heading"><h2>真正补齐 GameForge 作品的使用入口</h2><p>这不是复制 JEI 全部生态的替代品，而是针对 GameForge 低代码作品补上 JEI 最重要的浏览、搜索、配方和获取体验。</p></div>
+    <section class="section">
+      <div class="heading"><h2>这次专门解决“小逻辑屏幕”问题</h2><p>你的显示器分辨率并不低，但 Minecraft GUI Scale 3 会把可用坐标缩小到大约五百多像素宽。0.2.1 不再把桌面双栏硬塞进去，而是切换为真正的紧凑布局。</p></div>
       <div class="features">
-        <article class="feature"><div class="icon">⌕</div><h3>跨作品搜索</h3><p>按名称、ID、基础材料、技能效果和命名空间搜索所有已安装的 GameForge 内容。</p></article>
-        <article class="feature"><div class="icon">▦</div><h3>图标网格与分类</h3><p>按武器、物品、方块、生物、Boss 和有配方内容筛选，支持滚轮浏览。</p></article>
-        <article class="feature"><div class="icon">⚔</div><h3>属性详情</h3><p>显示伤害、攻速、生命、护甲、载体、CustomModelData、触发方式、效果与冷却。</p></article>
-        <article class="feature"><div class="icon">3×3</div><h3>内置配方查看</h3><p>直接展示九宫格材料和最终自定义物品，不再让玩家只看到知识之书中转结果。</p></article>
-        <article class="feature"><div class="icon">+</div><h3>一键获取或召唤</h3><p>选中物品即可获取，选中生物或 Boss 即可召唤；服务端只执行白名单函数。</p></article>
-        <article class="feature"><div class="icon">✓</div><h3>兼容诊断</h3><p>检查作品数量、可浏览内容、配方和重复命名空间，提醒删除旧 JAR 副本。</p></article>
+        <article class="feature"><div class="icon">↔</div><h3>自动选择布局</h3><p>根据 GUI 缩放后的宽度和高度判断，不需要玩家手动切换模式。</p></article>
+        <article class="feature"><div class="icon">▦</div><h3>图标网格优先</h3><p>紧凑模式只在网格中显示物品图标，名称和操作放在独立底栏。</p></article>
+        <article class="feature"><div class="icon">≡</div><h3>详情单独成页</h3><p>属性不再塞在右侧窄栏里，点击“详情”后使用完整内容区域展示。</p></article>
+        <article class="feature"><div class="icon">3×3</div><h3>配方单独成页</h3><p>九宫格、输出物品和说明拥有自己的页面，不会与搜索栏或分类栏重叠。</p></article>
+        <article class="feature"><div class="icon">✓</div><h3>其他页面也压缩</h3><p>作品管理、兼容诊断、使用帮助和底部状态栏都增加了紧凑布局。</p></article>
+        <article class="feature"><div class="icon">JEI</div><h3>原有功能保留</h3><p>搜索、分类、悬停提示、一键获取、召唤、配方和诊断仍然可用。</p></article>
       </div>
     </section>
 
-    <section class="section" id="install"><div class="install">
-      <div><div class="heading"><h2>安装一次，管理以后所有作品</h2><p>Runtime 是独立 Forge Mod。升级时请删除旧版 Runtime，只保留一个最新 JAR。</p></div><div class="steps"><div class="step">下载 <code>gameforge-runtime-1.20.1-0.2.0.jar</code>。</div><div class="step">删除 <code>mods</code> 文件夹中的 Runtime 0.1.0 或其他旧副本。</div><div class="step">把新 Runtime 和网站生成的作品 JAR 放进同一个 PCL 实例 <code>mods</code> 文件夹。</div><div class="step">完全重启 Minecraft，进入世界后按 <b>G</b>。</div></div></div>
-      <div class="compat"><div class="heading"><h2>兼容要求</h2><p>0.2.0 专门面向网站目前的官方支持环境。</p></div><div class="rows"><div class="row"><span>Minecraft Java</span><b>1.20.1</b></div><div class="row"><span>Mod Loader</span><b>Forge 47.x</b></div><div class="row"><span>Java</span><b>17 或更高</b></div><div class="row"><span>作品格式</span><b>GameForge JAR</b></div><div class="row"><span>JEI</span><b>可同时安装</b></div><div class="row"><span>多人游戏</span><b>客户端 + 服务端</b></div></div><div class="notice">多人服务器中，客户端和服务端必须安装相同版本的 Runtime 与作品 JAR。Runtime 只浏览 GameForge 元数据；原版和其他 Mod 的完整配方仍由 JEI 等专业插件负责。</div></div>
-    </div></section>
+    <section class="section" id="install">
+      <div class="install">
+        <div>
+          <div class="heading"><h2>替换旧版即可测试</h2><p>请不要同时保留 0.2.0 和 0.2.1，否则 Forge 会报告重复 Mod ID。</p></div>
+          <div class="steps">
+            <div class="step">完全关闭 Minecraft 和 PCL 正在运行的游戏实例。</div>
+            <div class="step">从 <code>mods</code> 删除 <code>gameforge-runtime-1.20.1-0.2.0.jar</code>。</div>
+            <div class="step">放入 <code>gameforge-runtime-1.20.1-0.2.1.jar</code>，作品 JAR 只保留最新一个。</div>
+            <div class="step">重新启动游戏，进入世界后按 <b>G</b>。</div>
+          </div>
+        </div>
+        <div class="compat">
+          <div class="heading"><h2>兼容要求</h2><p>0.2.1 继续使用网站当前的官方目标环境。</p></div>
+          <div class="rows">
+            <div class="row"><span>Minecraft Java</span><b>1.20.1</b></div>
+            <div class="row"><span>Mod Loader</span><b>Forge 47.x</b></div>
+            <div class="row"><span>Java</span><b>17 或更高</b></div>
+            <div class="row"><span>高 GUI Scale</span><b>自动紧凑</b></div>
+            <div class="row"><span>JEI</span><b>可同时安装</b></div>
+            <div class="row"><span>多人游戏</span><b>客户端 + 服务端</b></div>
+          </div>
+          <div class="notice">Runtime 仍然专门浏览 GameForge 作品；原版和其他 Mod 的完整配方由 JEI 负责。多人服务器中，客户端与服务端需要安装相同版本的 Runtime 和作品 JAR。</div>
+        </div>
+      </div>
+    </section>
 
-    <section class="section"><div class="download"><h2>下载 GameForge Runtime Content Browser</h2><p>源码已由 GitHub Actions 使用 Java 17 与 Forge 47.4.21 编译，JAR 已通过压缩结构、核心类、语言文件和内容浏览器类检查。</p><a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.2.0/gameforge-runtime-1.20.1-0.2.0.jar">下载 Runtime GUI 0.2.0</a><div class="verified">Verified build · tag runtime-v0.2.0 · Minecraft Java 1.20.1 + Forge 47.x</div></div></section>
+    <section class="section">
+      <div class="download">
+        <h2>下载响应式 Runtime 0.2.1</h2>
+        <p>源码已经通过 Java 17、Forge 47.4.21 编译；自动检查确认 JAR 包含桌面浏览器、紧凑浏览器、网络操作和物品模型工厂。</p>
+        <a class="button primary" href="https://github.com/haoduo56678-crypto/GameForge-Lite/releases/download/runtime-v0.2.1/gameforge-runtime-1.20.1-0.2.1.jar">下载 GameForge Runtime 0.2.1</a>
+        <div class="verified">Runtime Responsive Browser · Minecraft Java 1.20.1 · Forge 47.x</div>
+      </div>
+    </section>
 
-    <footer>GameForge Runtime 0.2.0 Preview · MIT License · 与 GameForge Lite 2.1.1 配套</footer>
+    <footer>GameForge Runtime 0.2.1 Preview · MIT License · 与 GameForge Lite 2.1.1 配套</footer>
   </main>
 </body>
 </html>
