@@ -7,9 +7,14 @@ const zlib = require('node:zlib');
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const PARTS_DIR = path.join(ROOT, '.release-v4');
+const PARTS_DIR = path.join(ROOT, 'release-v4');
 const OUT_DIR = path.join(ROOT, 'dist');
-const EXPECTED_PARTS = 16;
+const EXPECTED_NAMES = [
+  ...Array.from({ length: 13 }, (_, index) => `chunk-${String(index).padStart(3, '0')}`),
+  'chunk-013-0', 'chunk-013-1', 'chunk-013-2',
+  'chunk-014-0', 'chunk-014-1', 'chunk-014-2',
+  'chunk-015',
+];
 const EXPECTED_SHA256 = '0a415215227002f9d8764605a5482d473e7e85ba87772429fee7dab17a8ddbff';
 const REQUIRED_FILES = [
   'index.html',
@@ -133,14 +138,12 @@ function build() {
   }
 
   const partNames = fs.readdirSync(PARTS_DIR)
-    .filter((name) => /^chunk-\d+$/.test(name))
+    .filter((name) => name.startsWith('chunk-'))
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
-  if (partNames.length !== EXPECTED_PARTS) {
-    throw new Error(`Expected ${EXPECTED_PARTS} release chunks, found ${partNames.length}.`);
+  if (partNames.length !== EXPECTED_NAMES.length) {
+    throw new Error(`Expected ${EXPECTED_NAMES.length} release chunks, found ${partNames.length}.`);
   }
-
-  const expectedNames = Array.from({ length: EXPECTED_PARTS }, (_, index) => `chunk-${String(index).padStart(3, '0')}`);
-  if (partNames.some((name, index) => name !== expectedNames[index])) {
+  if (partNames.some((name, index) => name !== EXPECTED_NAMES[index])) {
     throw new Error(`Release chunks are incomplete or incorrectly named: ${partNames.join(', ')}`);
   }
 
