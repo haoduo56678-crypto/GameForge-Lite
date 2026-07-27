@@ -4,7 +4,7 @@
   "private": true,
   "description": "Zero-cost Minecraft Java 1.20.1 creation studio",
   "scripts": {
-    "build": "node scripts/build-release.js",
+    "build": "node scripts/build-release.js && node scripts/check-jar-builder.js",
     "start": "npm run build && node scripts/serve.js"
   },
   "engines": {
