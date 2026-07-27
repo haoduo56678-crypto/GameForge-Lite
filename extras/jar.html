@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZIP → JAR · GameForge Lite</title>
+  <meta name="description" content="把 GameForge 导出的 ZIP 在浏览器本地转换成 Forge 1.20.1 JAR。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080c17;
+      --panel: rgba(17, 24, 41, 0.92);
+      --panel-2: rgba(24, 34, 56, 0.78);
+      --line: rgba(147, 178, 238, 0.2);
+      --text: #eef4ff;
+      --muted: #9facbf;
+      --accent: #80a9ff;
+      --accent-2: #8c7dff;
+      --success: #77e2ac;
+      --danger: #ff8d9a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(84, 117, 225, 0.22), transparent 36rem),
+        radial-gradient(circle at 85% 15%, rgba(127, 87, 223, 0.18), transparent 31rem),
+        var(--bg);
+    }
+    a { color: inherit; }
+    .shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+    .back { color: var(--muted); text-decoration: none; font-weight: 700; }
+    .badge { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: #cdd9ef; background: rgba(255,255,255,.035); font-size: 13px; }
+    .hero { margin: 36px 0 28px; }
+    .hero h1 { margin: 0 0 12px; font-size: clamp(38px, 7vw, 72px); letter-spacing: -0.05em; }
+    .hero p { margin: 0; max-width: 720px; color: var(--muted); font-size: 18px; line-height: 1.75; }
+    .card { border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,.28); overflow: hidden; }
+    .card-section { padding: 24px; border-bottom: 1px solid var(--line); }
+    .card-section:last-child { border-bottom: 0; }
+    .section-title { margin: 0 0 8px; font-size: 18px; }
+    .section-copy { margin: 0 0 18px; color: var(--muted); line-height: 1.65; }
+    .drop-zone { min-height: 190px; border: 1.5px dashed rgba(128, 169, 255, .45); border-radius: 20px; display: grid; place-items: center; text-align: center; padding: 28px; cursor: pointer; background: linear-gradient(135deg, rgba(128,169,255,.07), rgba(140,125,255,.05)); transition: .2s ease; }
+    .drop-zone:hover, .drop-zone.dragging { border-color: var(--accent); transform: translateY(-2px); background: linear-gradient(135deg, rgba(128,169,255,.13), rgba(140,125,255,.1)); }
+    .drop-icon { font-size: 34px; margin-bottom: 10px; }
+    .drop-zone strong { display: block; font-size: 20px; margin-bottom: 8px; }
+    .drop-zone span { color: var(--muted); }
+    .file-name { margin-top: 14px; color: #c9d7f2; font-size: 14px; }
+    input[type="file"] { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .analysis-grid div { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-2); }
+    .analysis-grid span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; }
+    .analysis-grid strong { display: block; overflow-wrap: anywhere; }
+    .warning-list { margin-top: 14px; color: #ffd28d; font-size: 14px; }
+    .warning-list p { margin: 7px 0 0; }
+    .form-grid { display: grid; grid-template-columns: 1.3fr 1fr .7fr; gap: 14px; }
+    label { display: grid; gap: 8px; color: #cbd7ea; font-size: 13px; font-weight: 700; }
+    input[type="text"] { width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 13px; background: #0d1423; color: var(--text); padding: 0 14px; outline: none; font: inherit; }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(128,169,255,.12); }
+    .actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    button { min-height: 50px; border: 0; border-radius: 14px; padding: 0 22px; color: #07101f; background: linear-gradient(135deg, var(--accent), #b099ff); font: 800 15px/1 inherit; cursor: pointer; box-shadow: 0 12px 30px rgba(78,112,221,.24); }
+    button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+    .status { flex: 1; min-width: 240px; color: var(--muted); line-height: 1.55; }
+    .status[data-type="success"] { color: var(--success); }
+    .status[data-type="error"] { color: var(--danger); }
+    .progress { margin-top: 16px; }
+    .progress-track { height: 9px; border-radius: 999px; background: rgba(255,255,255,.075); overflow: hidden; }
+    .progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .15s ease; }
+    .progress-text { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; }
+    .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .note { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.025); color: var(--muted); line-height: 1.6; font-size: 14px; }
+    .note strong { display: block; color: var(--text); margin-bottom: 6px; }
+    code { color: #c6d7ff; }
+    @media (max-width: 760px) {
+      .analysis-grid, .form-grid, .notes { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; }
+      .hero { margin-top: 24px; }
+      .card-section { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a class="back" href="index.html">← 返回创作工作室</a>
+      <span class="badge">本地转换 · 不上传文件 · 免费</span>
+    </div>
+
+    <section class="hero">
+      <h1>ZIP → JAR</h1>
+      <p>上传 GameForge“下载作品”得到的完整 ZIP。页面会把其中的数据包和资源包合并成一个 Forge 1.20.1 低代码 Mod JAR，最后只需把一个文件放进 PCL 的 <code>mods</code> 文件夹。</p>
+    </section>
+
+    <section class="card">
+      <div class="card-section">
+        <h2 class="section-title">1. 选择 GameForge ZIP</h2>
+        <p class="section-copy">支持包含 <code>datapack/</code>、<code>resourcepack/</code> 和 <code>project.json</code> 的完整作品 ZIP。</p>
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0">
+          <div>
+            <div class="drop-icon">📦</div>
+            <strong>把 ZIP 拖到这里，或点击选择</strong>
+            <span>最大 100 MB，所有处理都在你的浏览器中进行</span>
+            <div class="file-name" id="fileName">尚未选择文件</div>
+          </div>
+          <input id="fileInput" type="file" accept=".zip,application/zip">
+        </div>
+      </div>
+
+      <div class="card-section" id="analysis" hidden></div>
+
+      <div class="card-section">
+        <h2 class="section-title">2. JAR 信息</h2>
+        <p class="section-copy">通常不需要修改。Mod ID 会自动处理成 Forge 可接受的格式。</p>
+        <div class="form-grid">
+          <label>显示名称<input id="projectName" type="text" value="GameForge Project" maxlength="80"></label>
+          <label>Mod ID<input id="modId" type="text" value="gameforge_project" maxlength="63"></label>
+          <label>版本<input id="modVersion" type="text" value="1.0.0" maxlength="24"></label>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="actions">
+          <button id="convertButton" type="button" disabled>转换并下载 JAR</button>
+          <div class="status" id="status" data-type="info">先选择一个 GameForge ZIP。</div>
+        </div>
+        <div class="progress" id="progress" hidden>
+          <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+          <span class="progress-text" id="progressText"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="notes">
+      <div class="note"><strong>安装更省事</strong>生成后只需把 JAR 放到 PCL 对应 1.20.1 Forge 实例的 <code>mods</code> 文件夹。</div>
+      <div class="note"><strong>不是改后缀</strong>转换器会重组目录并写入 Forge 的 <code>META-INF/mods.toml</code>，而不是简单重命名。</div>
+      <div class="note"><strong>功能边界</strong>它封装现有数据包与资源包行为，不会编译任意 Java 源码，也不会凭空注册新的原版物品 ID。</div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous"></script>
+  <script src="jar-builder.js"></script>
+</body>
+</html>
