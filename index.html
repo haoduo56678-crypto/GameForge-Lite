@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GameForge Lite</title>
+  <meta name="description" content="零成本 Minecraft 创作工具：生成指令、配方、掉落表、数据包和资源包。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Minecraft Java 1.20.1</p>
+      <h1>GameForge Lite</h1>
+      <p class="subtitle">让普通玩家也能体验制作数据包、配方、掉落表和资源包。</p>
+      <div class="badges">
+        <span>无需登录</span><span>无需 API</span><span>本地生成</span><span>免费运行</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" aria-label="工具列表">
+      <button class="nav active" data-page="command">指令生成器</button>
+      <button class="nav" data-page="recipe">配方生成器</button>
+      <button class="nav" data-page="loot">掉落表生成器</button>
+      <button class="nav" data-page="function">函数数据包</button>
+      <button class="nav" data-page="resource">资源包骨架</button>
+      <button class="nav" data-page="about">使用说明</button>
+    </aside>
+
+    <section class="workspace">
+      <div class="page active" id="page-command">
+        <div class="section-head"><div><h2>指令生成器</h2><p>通过表单生成常用复杂指令。</p></div></div>
+        <div class="grid two">
+          <label>指令类型<select id="commandType"><option value="give">给予自定义物品</option><option value="summon">召唤实体</option><option value="effect">给予效果</option><option value="title">屏幕标题</option><option value="lightning">召唤闪电</option></select></label>
+          <label>目标选择器<input id="commandTarget" value="@p" /></label>
+          <label>物品 / 实体 / 效果 ID<input id="commandId" value="minecraft:diamond_sword" /></label>
+          <label>数量 / 时长<input id="commandAmount" type="number" value="1" min="1" /></label>
+          <label>显示名称<input id="commandName" value="雷霆之刃" /></label>
+          <label>附加值<input id="commandExtra" value="10" /></label>
+        </div>
+        <div class="actions"><button class="primary" id="generateCommand">生成指令</button><button id="copyCommand">复制</button></div>
+        <pre id="commandOutput" class="output"></pre>
+      </div>
+
+      <div class="page" id="page-recipe">
+        <div class="section-head"><div><h2>配方生成器</h2><p>生成可直接放入数据包的 recipe JSON，并打包下载。</p></div></div>
+        <div class="grid two">
+          <label>命名空间<input id="recipeNamespace" value="gameforge" /></label>
+          <label>文件名<input id="recipeFile" value="thunder_sword" /></label>
+          <label>配方类型<select id="recipeType"><option value="shaped">有序合成</option><option value="shapeless">无序合成</option></select></label>
+          <label>产物 ID<input id="recipeResult" value="minecraft:diamond_sword" /></label>
+          <label>产物数量<input id="recipeCount" type="number" value="1" min="1" max="64" /></label>
+          <label>材料（逗号分隔）<input id="recipeIngredients" value="minecraft:diamond,minecraft:stick" /></label>
+          <label class="full">有序图案（每行一层，用 / 分隔；A、B、C 依次对应材料）<input id="recipePattern" value="A/A/B" /></label>
+        </div>
+        <div class="actions"><button class="primary" id="generateRecipe">生成 JSON</button><button id="downloadRecipePack">下载数据包 ZIP</button></div>
+        <pre id="recipeOutput" class="output"></pre>
+      </div>
+
+      <div class="page" id="page-loot">
+        <div class="section-head"><div><h2>掉落表生成器</h2><p>让某个生物或方块按概率掉落指定物品。</p></div></div>
+        <div class="grid two">
+          <label>命名空间<input id="lootNamespace" value="gameforge" /></label>
+          <label>文件名<input id="lootFile" value="diamond_cow" /></label>
+          <label>掉落物 ID<input id="lootItem" value="minecraft:diamond" /></label>
+          <label>掉落概率（0–100）<input id="lootChance" type="number" value="10" min="0" max="100" /></label>
+          <label>最少数量<input id="lootMin" type="number" value="1" min="1" /></label>
+          <label>最多数量<input id="lootMax" type="number" value="1" min="1" /></label>
+        </div>
+        <div class="actions"><button class="primary" id="generateLoot">生成 JSON</button><button id="downloadLootPack">下载数据包 ZIP</button></div>
+        <pre id="lootOutput" class="output"></pre>
+      </div>
+
+      <div class="page" id="page-function">
+        <div class="section-head"><div><h2>函数数据包</h2><p>把多条 Minecraft 指令打包成一条 /function。</p></div></div>
+        <div class="grid two">
+          <label>命名空间<input id="fnNamespace" value="gameforge" /></label>
+          <label>函数名<input id="fnFile" value="thunder_power" /></label>
+          <label class="full">指令（每行一条，不要写开头的 /）<textarea id="fnCommands" rows="9">title @a title {"text":"雷霆降临！","color":"aqua"}
+execute at @p run summon minecraft:lightning_bolt ~ ~ ~
+give @p minecraft:diamond_sword{display:{Name:'{"text":"雷霆之刃","italic":false}'}} 1</textarea></label>
+        </div>
+        <div class="actions"><button class="primary" id="previewFunction">预览</button><button id="downloadFunctionPack">下载数据包 ZIP</button></div>
+        <pre id="functionOutput" class="output"></pre>
+      </div>
+
+      <div class="page" id="page-resource">
+        <div class="section-head"><div><h2>资源包骨架</h2><p>生成标准目录、pack.mcmeta 和示例模型。纹理 PNG 可稍后放入指定位置。</p></div></div>
+        <div class="grid two">
+          <label>命名空间<input id="resNamespace" value="gameforge" /></label>
+          <label>资源包名称<input id="resName" value="GameForge Resource Pack" /></label>
+          <label>基础物品 ID<input id="resBaseItem" value="diamond_sword" /></label>
+          <label>CustomModelData<input id="resModelData" type="number" value="1001" min="1" /></label>
+          <label>自定义模型名<input id="resModelName" value="thunder_sword" /></label>
+          <label>描述<input id="resDescription" value="由 GameForge Lite 生成" /></label>
+        </div>
+        <div class="notice">下载后，把你的 PNG 放到 <code>assets/命名空间/textures/item/模型名.png</code>。</div>
+        <div class="actions"><button class="primary" id="previewResource">预览模型</button><button id="downloadResourcePack">下载资源包 ZIP</button></div>
+        <pre id="resourceOutput" class="output"></pre>
+      </div>
+
+      <div class="page" id="page-about">
+        <h2>怎么使用</h2>
+        <ol class="steps">
+          <li>选择左边的工具并填写内容。</li>
+          <li>先点击“生成”或“预览”，确认 JSON / 指令。</li>
+          <li>下载 ZIP。</li>
+          <li>数据包放进世界目录的 <code>datapacks</code>；资源包放进游戏目录的 <code>resourcepacks</code>。</li>
+          <li>进入游戏后执行 <code>/reload</code>。</li>
+        </ol>
+        <div class="notice">这是第一版 MVP，目标是先让玩家真的生成并运行内容。完整 Forge Mod、实体、维度和自动贴图会在后续版本加入。</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>GameForge Lite · 所有文件均在你的浏览器本地生成</footer>
+  <script src="app.js"></script>
+</body>
+</html>
