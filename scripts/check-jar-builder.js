@@ -7,6 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const builderPath = path.join(DIST, 'jar-builder.js');
 const pagePath = path.join(DIST, 'jar.html');
+const entryPath = path.join(DIST, 'jar-entry.js');
 
 function requireFile(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -25,6 +26,7 @@ function requireMarkers(text, fileName, markers) {
 
 const builder = requireFile(builderPath);
 const page = requireFile(pagePath);
+const entry = requireFile(entryPath);
 
 requireMarkers(builder, 'dist/jar-builder.js', [
   'const TARGET_PACK_FORMAT = 15',
@@ -40,4 +42,12 @@ requireMarkers(page, 'dist/jar.html', [
   'jar-builder.js?v=2.1.1-packmeta-fix'
 ]);
 
-console.log('ZIP → JAR build checks passed: root pack.mcmeta and post-build validation are enabled.');
+requireMarkers(entry, 'dist/jar-entry.js', [
+  'Runtime GUI',
+  '温馨提示：建议先安装 Runtime GUI',
+  '仍然下载作品',
+  'gameforge.runtime.notice.installed.v1',
+  'interceptProjectDownload'
+]);
+
+console.log('ZIP → JAR and Runtime download notice checks passed.');
