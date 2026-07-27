@@ -8,7 +8,6 @@ const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
-const LOCAL_PATH = path.join(DIST, 'local-vocabulary.js');
 const DATA_PATH = path.join(DIST, 'vocabulary-data.js');
 const PACK_PATH = path.join(DIST, 'vocabulary-pack.js');
 
@@ -17,7 +16,7 @@ function requireFile(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
-for (const filePath of [LOCAL_PATH, DATA_PATH, PACK_PATH]) {
+for (const filePath of [DATA_PATH, PACK_PATH]) {
   requireFile(filePath);
   execFileSync(process.execPath, ['--check', filePath], { stdio: 'inherit' });
 }
@@ -110,7 +109,6 @@ const context = createContext();
 load(context, path.join(DIST, 'js/core.js'));
 context.GameForge.texture.generateTextureBase64 = () => 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+MY7vWQAAAABJRU5ErkJggg==';
 load(context, path.join(DIST, 'js/generators.js'));
-load(context, LOCAL_PATH);
 load(context, DATA_PATH);
 load(context, PACK_PATH);
 
