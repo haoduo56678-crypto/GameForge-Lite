@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ZIP → JAR · GameForge Lite</title>
-  <meta name="description" content="把 GameForge 导出的 ZIP 在浏览器本地转换成 Forge 1.20.1 JAR。">
+  <meta name="description" content="把 GameForge 导出的 ZIP 在浏览器本地补全、检查并转换成 Forge 1.20.1 JAR。">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     :root {
@@ -38,7 +38,7 @@
     .badge { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: #cdd9ef; background: rgba(255,255,255,.035); font-size: 13px; }
     .hero { margin: 36px 0 28px; }
     .hero h1 { margin: 0 0 12px; font-size: clamp(38px, 7vw, 72px); letter-spacing: -0.05em; }
-    .hero p { margin: 0; max-width: 720px; color: var(--muted); font-size: 18px; line-height: 1.75; }
+    .hero p { margin: 0; max-width: 760px; color: var(--muted); font-size: 18px; line-height: 1.75; }
     .card { border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: 0 24px 70px rgba(0,0,0,.28); overflow: hidden; }
     .card-section { padding: 24px; border-bottom: 1px solid var(--line); }
     .card-section:last-child { border-bottom: 0; }
@@ -87,12 +87,12 @@
   <main class="shell">
     <div class="topbar">
       <a class="back" href="index.html">← 返回创作工作室</a>
-      <span class="badge">本地转换 · 不上传文件 · 免费</span>
+      <span class="badge">本地补全 · 自动检查 · 免费</span>
     </div>
 
     <section class="hero">
       <h1>ZIP → JAR</h1>
-      <p>上传 GameForge“下载作品”得到的完整 ZIP。页面会把其中的数据包和资源包合并成一个 Forge 1.20.1 低代码 Mod JAR，最后只需把一个文件放进 PCL 的 <code>mods</code> 文件夹。</p>
+      <p>上传 GameForge“下载作品”得到的完整 ZIP。页面会自动补全 JAR 根目录的 <code>pack.mcmeta</code>、Forge 的 <code>META-INF/mods.toml</code> 和 Manifest，再重新打开生成结果进行结构、JSON 与 PNG 检查，最后下载一个可放进 PCL <code>mods</code> 文件夹的 JAR。</p>
     </section>
 
     <section class="card">
@@ -103,7 +103,7 @@
           <div>
             <div class="drop-icon">📦</div>
             <strong>把 ZIP 拖到这里，或点击选择</strong>
-            <span>最大 100 MB，所有处理都在你的浏览器中进行</span>
+            <span>最大 100 MB，所有处理和检查都在你的浏览器中进行</span>
             <div class="file-name" id="fileName">尚未选择文件</div>
           </div>
           <input id="fileInput" type="file" accept=".zip,application/zip">
@@ -114,7 +114,7 @@
 
       <div class="card-section">
         <h2 class="section-title">2. JAR 信息</h2>
-        <p class="section-copy">通常不需要修改。Mod ID 会自动处理成 Forge 可接受的格式。</p>
+        <p class="section-copy">通常不需要修改。Mod ID 与版本会自动处理成 Forge 和 Windows 文件名可接受的格式。</p>
         <div class="form-grid">
           <label>显示名称<input id="projectName" type="text" value="GameForge Project" maxlength="80"></label>
           <label>Mod ID<input id="modId" type="text" value="gameforge_project" maxlength="63"></label>
@@ -124,7 +124,7 @@
 
       <div class="card-section">
         <div class="actions">
-          <button id="convertButton" type="button" disabled>转换并下载 JAR</button>
+          <button id="convertButton" type="button" disabled>补全、检查并下载 JAR</button>
           <div class="status" id="status" data-type="info">先选择一个 GameForge ZIP。</div>
         </div>
         <div class="progress" id="progress" hidden>
@@ -135,13 +135,13 @@
     </section>
 
     <section class="notes">
-      <div class="note"><strong>安装更省事</strong>生成后只需把 JAR 放到 PCL 对应 1.20.1 Forge 实例的 <code>mods</code> 文件夹。</div>
-      <div class="note"><strong>不是改后缀</strong>转换器会重组目录并写入 Forge 的 <code>META-INF/mods.toml</code>，而不是简单重命名。</div>
-      <div class="note"><strong>功能边界</strong>它封装现有数据包与资源包行为，不会编译任意 Java 源码，也不会凭空注册新的原版物品 ID。</div>
+      <div class="note"><strong>安装更省事</strong>验证通过后，只需把 JAR 放到 PCL 对应 Forge 1.20.1 实例的 <code>mods</code> 文件夹。</div>
+      <div class="note"><strong>补齐 Forge 结构</strong>自动写入根目录 <code>pack.mcmeta</code>、<code>META-INF/mods.toml</code> 和 <code>MANIFEST.MF</code>，不是简单改后缀。</div>
+      <div class="note"><strong>下载前再检查</strong>转换器会重新读取 JAR，检查必要文件、目录扁平化、JSON、PNG 和 Minecraft 1.20.1 格式。</div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous"></script>
-  <script src="jar-builder.js"></script>
+  <script src="jar-builder.js?v=2.1.1-packmeta-fix"></script>
 </body>
 </html>
