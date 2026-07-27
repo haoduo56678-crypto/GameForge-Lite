@@ -1,0 +1,22 @@
+{
+  "key.categories.gameforge_runtime": "GameForge Runtime",
+  "key.gameforge_runtime.open": "Open GameForge Dashboard",
+  "screen.gameforge_runtime.title": "GameForge Runtime",
+  "screen.gameforge_runtime.projects": "My Projects",
+  "screen.gameforge_runtime.diagnostics": "Compatibility",
+  "screen.gameforge_runtime.help": "Install Help",
+  "screen.gameforge_runtime.search": "Search projects or namespaces…",
+  "screen.gameforge_runtime.empty": "No GameForge project JARs detected",
+  "screen.gameforge_runtime.empty_hint": "Generate a project on the website and place its JAR in the mods folder.",
+  "screen.gameforge_runtime.menu": "Open Project Menu",
+  "screen.gameforge_runtime.get_all": "Get All Content",
+  "screen.gameforge_runtime.spawn_all": "Spawn All",
+  "screen.gameforge_runtime.doctor": "Run Diagnostics",
+  "screen.gameforge_runtime.cleanup": "Clean Generated Content",
+  "screen.gameforge_runtime.refresh": "Rescan",
+  "screen.gameforge_runtime.close": "Close",
+  "message.gameforge_runtime.sent": "Sent GameForge action to server: %s",
+  "message.gameforge_runtime.missing_project": "Server did not recognize this GameForge project: %s",
+  "message.gameforge_runtime.missing_function": "Project is missing runtime function: %s",
+  "message.gameforge_runtime.executed": "Executed: %s"
+}
