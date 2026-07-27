@@ -11,8 +11,38 @@ GameForge Lite 是一个完全在浏览器本地运行的 Minecraft Java 1.20.1 
 - Forge 1.20.1 工具、物品、食物和方块源码生成
 - 项目保存、复制、导入、导出、文件预览与完整 ZIP 下载
 - 将 GameForge 完整 ZIP 在浏览器本地转换为 Forge 1.20.1 低代码 JAR
-- 自动诊断、13 项浏览器自测、日志错误分析与 PWA 离线缓存
+- 游戏内首次进入初始化、普通玩家可点击菜单、配方自动解锁与完整操作入口
+- 自动诊断、16 项浏览器自测、日志错误分析与 PWA 离线缓存
 - 重复 ID、CustomModelData 和 ZIP 路径自动避让
+
+## 游戏内核心机制
+
+每个包含低代码内容的项目都会自动生成 GameForge 核心运行时：
+
+- 第一次进入世界时自动初始化并显示项目菜单
+- 菜单使用 `/trigger`，普通玩家不需要管理员权限就能点击
+- 一键获取全部武器、物品、资源物品和装饰方块
+- 一键召唤全部生物与 Boss
+- 自定义配方自动加入玩家配方书
+- 武器支持右键、命中和被动触发；被动技能自动生成冷却与 Tick 机制
+- 目标型技能在附近没有目标时不再错误消耗冷却
+- 装饰方块在生存模式放置时消耗物品，并可回收最近方块
+- 掉落表支持直接测试，并可应用到最近实体或脚下容器
+- 指令、函数、进度、配方和资源物品都有游戏内可发现的操作入口
+- 提供全部获取、全部召唤、清理生成物、运行时自检和卸载状态函数
+
+常用入口会写入每个作品的 `README_GAMEFORGE.txt`。核心函数格式如下：
+
+```mcfunction
+/function 命名空间:gameforge/menu
+/function 命名空间:gameforge/get_all
+/function 命名空间:gameforge/spawn_all
+/function 命名空间:gameforge/cleanup
+/function 命名空间:gameforge/doctor
+/function 命名空间:gameforge/uninstall
+```
+
+首次初始化后，菜单也会显示一条普通玩家可用的 `/trigger` 命令。
 
 ## ZIP → JAR
 
@@ -51,14 +81,14 @@ Vercel 会运行 `npm run build`，并把 `dist` 目录发布为静态网站。�
 
 ## 兼容边界
 
-- 原版生成器和 ZIP → JAR 转换器面向 Minecraft Java 1.20.1、Forge 47.x 和 Java 17 及以上版本。
-- ZIP → JAR 会把现有数据包与资源包封装为低代码 Mod；它不是简单改后缀，但也不会编译任意 Java 源码或注册真正的新物品 ID。
-- Forge 源码导出仍是可编辑源码工程；需要真实 Java 逻辑时，最终仍需构建并进入测试客户端验证。
+- 原版生成器、核心运行时和 ZIP → JAR 转换器面向 Minecraft Java 1.20.1 与 Forge 47.x。
+- 低代码 JAR 会把数据包与资源包作为 Mod 加载，但不会注册真正的新物品 ID；自定义内容使用原版载体、CustomModelData、函数和配方实现。
+- Forge 源码导出仍用于真正注册新物品、方块或 Java 事件逻辑；需要这类能力时仍需构建源码项目。
 - 爆炸、循环函数、大范围指令和自定义实体应先在复制的测试世界运行。
 
 ## 测试状态
 
-JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出、Forge 源码结构和 JAR 目录生成已完成自动检查。ZIP → JAR 还会在浏览器中对最终 JAR 进行二次结构验证；真实 Minecraft 加载与游戏行为继续由本地 Forge 1.20.1 环境验证。
+JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出、Forge 源码结构、JAR 目录生成和核心运行时已完成自动检查。浏览器自测覆盖菜单、Trigger、首次进入初始化、被动武器、组件动作与输出路径；真实 Minecraft 行为继续由本地 Forge 1.20.1 环境验证。
 
 ## License
 
