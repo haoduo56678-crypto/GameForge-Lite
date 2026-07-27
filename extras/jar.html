@@ -57,10 +57,11 @@
     .analysis-grid strong { display: block; overflow-wrap: anywhere; }
     .warning-list { margin-top: 14px; color: #ffd28d; font-size: 14px; }
     .warning-list p { margin: 7px 0 0; }
-    .form-grid { display: grid; grid-template-columns: 1.3fr 1fr .7fr; gap: 14px; }
+    .form-grid { display: grid; grid-template-columns: 1.25fr 1.1fr 1fr .65fr; gap: 14px; }
     label { display: grid; gap: 8px; color: #cbd7ea; font-size: 13px; font-weight: 700; }
     input[type="text"] { width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 13px; background: #0d1423; color: var(--text); padding: 0 14px; outline: none; font: inherit; }
     input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(128,169,255,.12); }
+    .field-help { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     button { min-height: 50px; border: 0; border-radius: 14px; padding: 0 22px; color: #07101f; background: linear-gradient(135deg, var(--accent), #b099ff); font: 800 15px/1 inherit; cursor: pointer; box-shadow: 0 12px 30px rgba(78,112,221,.24); }
     button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
@@ -75,6 +76,9 @@
     .note { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.025); color: var(--muted); line-height: 1.6; font-size: 14px; }
     .note strong { display: block; color: var(--text); margin-bottom: 6px; }
     code { color: #c6d7ff; }
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
     @media (max-width: 760px) {
       .analysis-grid, .form-grid, .notes { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; }
@@ -114,12 +118,14 @@
 
       <div class="card-section">
         <h2 class="section-title">2. JAR 信息</h2>
-        <p class="section-copy">通常不需要修改。Mod ID 与版本会自动处理成 Forge 和 Windows 文件名可接受的格式。</p>
+        <p class="section-copy">单个组件会自动使用武器、物品、方块、生物或 Boss 的名称；多个组件优先使用作品名称。文件名可以继续手动修改。</p>
         <div class="form-grid">
           <label>显示名称<input id="projectName" type="text" value="GameForge Project" maxlength="80"></label>
+          <label>JAR 文件名<input id="jarFileName" type="text" value="GameForge作品" maxlength="80"></label>
           <label>Mod ID<input id="modId" type="text" value="gameforge_project" maxlength="63"></label>
           <label>版本<input id="modVersion" type="text" value="1.0.0" maxlength="24"></label>
         </div>
+        <p class="field-help">例如作品只有“亡灵剑”一个组件时，下载文件会命名为 <code>亡灵剑-1.0.0-forge-1.20.1.jar</code>。中文文件名不会再被替换成随机编号。</p>
       </div>
 
       <div class="card-section">
@@ -135,13 +141,14 @@
     </section>
 
     <section class="notes">
-      <div class="note"><strong>安装更省事</strong>验证通过后，只需把 JAR 放到 PCL 对应 Forge 1.20.1 实例的 <code>mods</code> 文件夹。</div>
+      <div class="note"><strong>名称更直观</strong>单个组件自动使用内容名称，多组件作品使用项目名称，方便区分不同 JAR。</div>
       <div class="note"><strong>补齐 Forge 结构</strong>自动写入根目录 <code>pack.mcmeta</code>、<code>META-INF/mods.toml</code> 和 <code>MANIFEST.MF</code>，不是简单改后缀。</div>
-      <div class="note"><strong>下载前再检查</strong>转换器会重新读取 JAR，检查必要文件、目录扁平化、JSON、PNG 和 Minecraft 1.20.1 格式。</div>
+      <div class="note"><strong>更新时替换旧文件</strong>同一作品的新旧 JAR 不要同时放在 <code>mods</code> 文件夹，避免重复 Mod ID 或资源覆盖。</div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous"></script>
+  <script src="jar-filename.js?v=2.1.2-content-name"></script>
   <script src="jar-builder.js?v=2.1.1-packmeta-fix"></script>
 </body>
 </html>
