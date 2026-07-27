@@ -1,6 +1,6 @@
 name: Finalize GameForge Lite 2.1.1
 
-# Retry marker: all release parts 00-11 are now present.
+# Final retry marker: release parts 00-13 are present.
 on:
   push:
     branches:
@@ -27,7 +27,7 @@ jobs:
           set -euo pipefail
 
           test -f .release/part-00
-          test -f .release/part-11
+          test -f .release/part-13
           cat .release/part-* | tr -d '\r\n' | base64 --decode > /tmp/gameforge-lite.tar.gz
           gzip -t /tmp/gameforge-lite.tar.gz
 
