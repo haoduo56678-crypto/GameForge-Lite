@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p audit-output/js
+          mkdir -p audit-output/js audit-output/runtime
           cp dist/index.html audit-output/
           cp dist/js/core.js audit-output/js/
           cp dist/js/generators.js audit-output/js/
@@ -43,7 +43,11 @@ jobs:
           cp dist/jar-builder.js audit-output/
           cp dist/jar-entry.js audit-output/
           cp dist/TEST-REPORT.md audit-output/
-          find audit-output -type f -maxdepth 3 -print -exec wc -c {} \;
+          cp -R runtime/src audit-output/runtime/
+          cp runtime/build.gradle audit-output/runtime/
+          cp runtime/gradle.properties audit-output/runtime/
+          cp -R scripts audit-output/repo-scripts
+          find audit-output -type f -maxdepth 8 -print -exec wc -c {} \;
 
       - name: Upload decoded build sources
         uses: actions/upload-artifact@v4
