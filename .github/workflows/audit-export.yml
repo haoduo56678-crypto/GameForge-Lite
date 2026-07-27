@@ -33,6 +33,9 @@ jobs:
           set -euo pipefail
           mkdir -p audit-output/js audit-output/runtime
           cp dist/index.html audit-output/
+          cp dist/styles.css audit-output/
+          cp dist/sw.js audit-output/
+          cp dist/manifest.webmanifest audit-output/
           cp dist/js/core.js audit-output/js/
           cp dist/js/generators.js audit-output/js/
           cp dist/js/app.js audit-output/js/
