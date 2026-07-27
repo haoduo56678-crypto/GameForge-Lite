@@ -1,0 +1,55 @@
+name: Build GameForge Runtime GUI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'runtime/**'
+      - '.github/workflows/runtime-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Build Forge runtime
+        run: gradle -p runtime clean build --stacktrace --no-daemon
+
+      - name: Verify runtime JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR='runtime/build/libs/gameforge-runtime-1.20.1-0.1.0.jar'
+          test -f "$JAR"
+          unzip -t "$JAR"
+          unzip -l "$JAR" | grep -q 'META-INF/mods.toml'
+          unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/GameForgeRuntime.class'
+          unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/client/ClientRuntime.class'
+          echo "Verified $JAR"
+
+      - name: Upload runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-runtime-forge-1.20.1
+          path: runtime/build/libs/gameforge-runtime-1.20.1-0.1.0.jar
+          if-no-files-found: error
