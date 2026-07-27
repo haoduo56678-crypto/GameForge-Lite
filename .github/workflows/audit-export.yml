@@ -1,9 +1,9 @@
 name: Export GameForge Build Sources for Audit
 
 on:
-  push:
+  pull_request:
     branches:
-      - audit/full-quality-pass
+      - main
     paths:
       - '**'
   workflow_dispatch:
