@@ -1,6 +1,6 @@
 # GameForge Lite 2.1.1
 
-GameForge Lite 是一个完全在浏览器本地运行的 Minecraft Java 1.20.1 创作工作室。它让普通玩家通过一句话、表单和模板生成可下载的数据包、资源包、指令函数与 Forge Mod 源码，不需要服务器、数据库、API Key 或付费 AI。
+GameForge Lite 是一个完全在浏览器本地运行的 Minecraft Java 1.20.1 创作工作室。它让普通玩家通过一句话、表单和模板生成可下载的数据包、资源包、指令函数与 Forge Mod 内容，不需要服务器、数据库、API Key 或付费 AI。
 
 ## 主要功能
 
@@ -10,8 +10,20 @@ GameForge Lite 是一个完全在浏览器本地运行的 Minecraft Java 1.20.1 
 - 资源包物品生成器与像素纹理编辑
 - Forge 1.20.1 工具、物品、食物和方块源码生成
 - 项目保存、复制、导入、导出、文件预览与完整 ZIP 下载
+- 将 GameForge 完整 ZIP 在浏览器本地转换为 Forge 1.20.1 低代码 JAR
 - 自动诊断、13 项浏览器自测、日志错误分析与 PWA 离线缓存
 - 重复 ID、CustomModelData 和 ZIP 路径自动避让
+
+## ZIP → JAR
+
+工作室右下角有 `ZIP → JAR` 入口。上传“下载作品”得到的完整 ZIP 后，转换器会：
+
+1. 识别 `datapack/data`、`resourcepack/assets` 和 `project.json`。
+2. 把数据包与资源包内容合并到同一个 JAR。
+3. 写入 Forge 1.20.1 所需的 `META-INF/mods.toml`，使用官方 `lowcodefml` 加载方式。
+4. 在浏览器本地生成 JAR，不上传作品，也不使用服务器编译。
+
+生成的 JAR 放进 PCL 对应 Forge 1.20.1 实例的 `mods` 文件夹。多人游戏时，服务端需要安装 JAR；需要贴图和模型的客户端也需要安装。
 
 ## 在电脑上运行
 
@@ -37,14 +49,14 @@ Vercel 会运行 `npm run build`，并把 `dist` 目录发布为静态网站。�
 
 ## 兼容边界
 
-- 原版生成器面向 Minecraft Java 1.20.1。
-- 数据包方案使用原版物品、CustomModelData 与显示实体组合实现，不会注册真正的新物品 ID。
-- Forge 导出是可编辑源码工程，不是预编译 JAR；最终仍需使用 Java 17 构建并进入测试客户端验证。
+- 原版生成器和 ZIP → JAR 转换器面向 Minecraft Java 1.20.1、Forge 47.x 和 Java 17。
+- ZIP → JAR 会把现有数据包与资源包封装为低代码 Mod；它不是简单改后缀，但也不会编译任意 Java 源码或注册真正的新物品 ID。
+- Forge 源码导出仍是可编辑源码工程；需要真实 Java 逻辑时，最终仍需使用 Java 17 构建并进入测试客户端验证。
 - 爆炸、循环函数、大范围指令和自定义实体应先在复制的测试世界运行。
 
 ## 测试状态
 
-JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出和 Forge 源码结构已完成自动测试；真实 Minecraft 游戏行为与 Forge JAR 编译由本地游戏环境继续验证。
+JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出、Forge 源码结构和 JAR 目录生成已完成自动检查；真实 Minecraft 加载与游戏行为由本地 Forge 1.20.1 环境继续验证。
 
 ## License
 
