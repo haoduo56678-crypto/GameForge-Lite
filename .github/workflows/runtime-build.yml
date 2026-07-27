@@ -39,7 +39,18 @@ jobs:
           gradle-version: '8.8'
 
       - name: Build Forge runtime
-        run: gradle -p runtime clean build --stacktrace --no-daemon
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle -p runtime clean build --stacktrace --no-daemon 2>&1 | tee runtime-build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-runtime-build-log
+          path: runtime-build.log
+          if-no-files-found: warn
 
       - name: Verify runtime JAR
         shell: bash
