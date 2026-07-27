@@ -13,6 +13,9 @@ import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
 public final class ClientRuntime {
+    private static final int COMPACT_WIDTH_THRESHOLD = 760;
+    private static final int COMPACT_HEIGHT_THRESHOLD = 430;
+
     private static final KeyMapping OPEN_DASHBOARD = new KeyMapping(
         "key.gameforge_runtime.open",
         KeyConflictContext.IN_GAME,
@@ -48,7 +51,12 @@ public final class ClientRuntime {
             while (OPEN_DASHBOARD.consumeClick()) {
                 Minecraft minecraft = Minecraft.getInstance();
                 if (minecraft.player != null && minecraft.level != null) {
-                    minecraft.setScreen(new GameForgeBrowserScreen());
+                    int scaledWidth = minecraft.getWindow().getGuiScaledWidth();
+                    int scaledHeight = minecraft.getWindow().getGuiScaledHeight();
+                    boolean compact = scaledWidth < COMPACT_WIDTH_THRESHOLD || scaledHeight < COMPACT_HEIGHT_THRESHOLD;
+                    minecraft.setScreen(compact
+                        ? new CompactGameForgeBrowserScreen()
+                        : new GameForgeBrowserScreen());
                 }
             }
         }
