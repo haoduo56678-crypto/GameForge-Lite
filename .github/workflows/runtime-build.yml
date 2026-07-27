@@ -45,37 +45,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          JAR='runtime/build/libs/gameforge-runtime-1.20.1-0.1.0.jar'
+          JAR='runtime/build/libs/gameforge-runtime-1.20.1-0.2.0.jar'
           test -f "$JAR"
           unzip -t "$JAR"
           unzip -l "$JAR" | grep -q 'META-INF/mods.toml'
           unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/GameForgeRuntime.class'
           unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/client/ClientRuntime.class'
+          unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/client/GameForgeBrowserScreen.class'
+          unzip -l "$JAR" | grep -q 'ai/gameforge/runtime/client/GameForgeItemFactory.class'
           echo "Verified $JAR"
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
           name: gameforge-runtime-forge-1.20.1
-          path: runtime/build/libs/gameforge-runtime-1.20.1-0.1.0.jar
+          path: runtime/build/libs/gameforge-runtime-1.20.1-0.2.0.jar
           if-no-files-found: error
 
       - name: Publish Runtime prerelease
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: runtime-v0.1.0
-          name: GameForge Runtime GUI 0.1.0
+          tag_name: runtime-v0.2.0
+          name: GameForge Runtime Content Browser 0.2.0
           body: |
-            GameForge Runtime GUI for Minecraft Java 1.20.1 and Forge 47.x.
+            GameForge Runtime content browser for Minecraft Java 1.20.1 and Forge 47.x.
 
             Install this JAR on the client and server, place GameForge-generated project JARs in the same mods folder, then press G in-game.
 
             Features:
-            - GameForge-styled project dashboard
-            - Automatic project discovery
-            - Get all, spawn all, diagnostics, cleanup and project menu actions
+            - JEI-style GameForge content grid with search and categories
+            - Item, weapon, block, entity and Boss details
+            - Built-in 3x3 recipe viewer showing the intended GameForge result
+            - One-click obtain and spawn actions with server-side validation
+            - Project management, compatibility diagnostics and duplicate namespace checks
             - Chinese and English interface
           prerelease: true
           make_latest: false
-          files: runtime/build/libs/gameforge-runtime-1.20.1-0.1.0.jar
+          files: runtime/build/libs/gameforge-runtime-1.20.1-0.2.0.jar
