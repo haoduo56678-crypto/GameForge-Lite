@@ -2,6 +2,13 @@
 
 (() => {
   const MAX_ZIP_SIZE = 100 * 1024 * 1024;
+  const TARGET_PACK_FORMAT = 15;
+  const REQUIRED_JAR_FILES = [
+    'META-INF/MANIFEST.MF',
+    'META-INF/mods.toml',
+    'pack.mcmeta'
+  ];
+
   const state = {
     file: null,
     zip: null,
@@ -46,6 +53,15 @@
       .trim();
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
   function fnv1a(value) {
     let hash = 0x811c9dc5;
     for (let index = 0; index < value.length; index += 1) {
@@ -64,6 +80,15 @@
       .replace(/^-+|-+$/g, '')
       .slice(0, 48);
     return slug || `gameforge-${fnv1a(String(value || Date.now()))}`;
+  }
+
+  function sanitizeVersion(value) {
+    const version = String(value || '')
+      .trim()
+      .replace(/[^0-9A-Za-z._+-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 24);
+    return version || '1.0.0';
   }
 
   function makeModId(value, seed) {
@@ -116,22 +141,47 @@
       .filter(({ path }) => path);
   }
 
-  function findRoot(entries) {
-    const packFiles = entries
-      .map(({ path }) => path)
-      .filter((path) => path === 'datapack/pack.mcmeta' || path.endsWith('/datapack/pack.mcmeta'));
-    if (!packFiles.length) return '';
-    const selected = packFiles.sort((a, b) => a.length - b.length)[0];
-    return selected.slice(0, -'datapack/pack.mcmeta'.length);
+  function prefixBeforeMarker(path, marker) {
+    if (path === marker) return '';
+    if (path.endsWith(`/${marker}`)) return path.slice(0, -(marker.length));
+    return null;
   }
 
-  async function readJson(zip, path) {
+  function findRoot(entries) {
+    const exactMarkers = [
+      'datapack/pack.mcmeta',
+      'resourcepack/pack.mcmeta',
+      'project.json'
+    ];
+    const candidates = [];
+
+    for (const { path } of entries) {
+      for (const marker of exactMarkers) {
+        const prefix = prefixBeforeMarker(path, marker);
+        if (prefix !== null) candidates.push(prefix);
+      }
+    }
+
+    if (!candidates.length) {
+      for (const { path } of entries) {
+        for (const marker of ['datapack/data/', 'resourcepack/assets/']) {
+          const index = path.indexOf(marker);
+          if (index >= 0) candidates.push(path.slice(0, index));
+        }
+      }
+    }
+
+    return candidates.sort((a, b) => a.length - b.length)[0] || '';
+  }
+
+  async function readOptionalJson(zip, path, label) {
     const entry = zip.file(path);
     if (!entry) return null;
+    const text = await entry.async('string');
     try {
-      return JSON.parse(await entry.async('string'));
-    } catch {
-      return null;
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error(`${label} 不是合法 JSON：${path}`);
     }
   }
 
@@ -143,35 +193,39 @@
 
     setStatus('正在读取 ZIP…');
     setProgress(8, '读取 ZIP');
+
     const zip = await window.JSZip.loadAsync(file, { createFolders: false });
     const entries = getFileEntries(zip);
     const root = findRoot(entries);
-    const prefix = root;
-
-    const dataPrefix = `${prefix}datapack/data/`;
-    const assetsPrefix = `${prefix}resourcepack/assets/`;
+    const dataPrefix = `${root}datapack/data/`;
+    const assetsPrefix = `${root}resourcepack/assets/`;
     const dataFiles = entries.filter(({ path }) => path.startsWith(dataPrefix));
     const assetFiles = entries.filter(({ path }) => path.startsWith(assetsPrefix));
-    const datapackMetaPath = `${prefix}datapack/pack.mcmeta`;
-    const resourcepackMetaPath = `${prefix}resourcepack/pack.mcmeta`;
 
     if (!dataFiles.length && !assetFiles.length) {
       throw new Error('没有找到 datapack/data 或 resourcepack/assets。请上传“下载作品”得到的完整 ZIP。');
     }
 
-    const projectPath = entries.find(({ path }) => path === `${prefix}project.json`)?.path
+    const projectPath = entries.find(({ path }) => path === `${root}project.json`)?.path
       || entries.find(({ path }) => path.endsWith('/project.json'))?.path
       || '';
-    const project = projectPath ? await readJson(zip, projectPath) : null;
-    const datapackMeta = await readJson(zip, datapackMetaPath);
-    const resourcepackMeta = await readJson(zip, resourcepackMetaPath);
+    const project = projectPath
+      ? await readOptionalJson(zip, projectPath, 'project.json')
+      : null;
+    const datapackMetaPath = `${root}datapack/pack.mcmeta`;
+    const resourcepackMetaPath = `${root}resourcepack/pack.mcmeta`;
+    const datapackMeta = await readOptionalJson(zip, datapackMetaPath, '数据包 pack.mcmeta');
+    const resourcepackMeta = await readOptionalJson(zip, resourcepackMetaPath, '资源包 pack.mcmeta');
     const packFormats = [datapackMeta?.pack?.pack_format, resourcepackMeta?.pack?.pack_format]
       .filter((value) => Number.isFinite(Number(value)))
       .map(Number);
 
     const fallbackName = file.name.replace(/\.zip$/i, '').replace(/[-_]+/g, ' ').trim() || 'GameForge Project';
     const projectName = getProjectName(project, fallbackName);
-    const defaultModId = makeModId(slugifyFileName(projectName).replaceAll('-', '_'), `${projectName}:${file.size}`);
+    const defaultModId = makeModId(
+      slugifyFileName(projectName).replaceAll('-', '_'),
+      `${projectName}:${file.size}`
+    );
 
     return {
       zip,
@@ -182,6 +236,8 @@
       dataFiles,
       assetFiles,
       packFormats,
+      hasDatapackMeta: Boolean(datapackMeta),
+      hasResourcepackMeta: Boolean(resourcepackMeta),
       projectName,
       defaultModId
     };
@@ -189,8 +245,10 @@
 
   function renderAnalysis(result) {
     const warnings = [];
-    if (result.packFormats.some((value) => value !== 15)) {
-      warnings.push(`检测到 pack_format：${[...new Set(result.packFormats)].join(', ')}；本工具输出目标是 Minecraft 1.20.1。`);
+    if (!result.hasDatapackMeta) warnings.push('源 ZIP 缺少数据包 pack.mcmeta；转换时会自动补全 JAR 根目录元数据。');
+    if (!result.hasResourcepackMeta) warnings.push('源 ZIP 缺少资源包 pack.mcmeta；转换时会自动补全 JAR 根目录元数据。');
+    if (result.packFormats.some((value) => value !== TARGET_PACK_FORMAT)) {
+      warnings.push(`检测到 pack_format：${[...new Set(result.packFormats)].join(', ')}；输出会固定为 Minecraft 1.20.1 所需的 ${TARGET_PACK_FORMAT}。`);
     }
     if (!result.dataFiles.length) warnings.push('没有数据包内容，JAR 只会包含资源包。');
     if (!result.assetFiles.length) warnings.push('没有资源包内容，JAR 只会包含数据包。');
@@ -201,25 +259,16 @@
         <div><span>项目</span><strong>${escapeHtml(result.projectName)}</strong></div>
         <div><span>数据文件</span><strong>${result.dataFiles.length}</strong></div>
         <div><span>资源文件</span><strong>${result.assetFiles.length}</strong></div>
-        <div><span>目标</span><strong>Forge 1.20.1</strong></div>
+        <div><span>目标</span><strong>Forge 1.20.1 · 自动校验</strong></div>
       </div>
       ${warnings.length ? `<div class="warning-list">${warnings.map((warning) => `<p>⚠ ${escapeHtml(warning)}</p>`).join('')}</div>` : ''}
     `;
   }
 
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
-  }
-
   function buildModsToml({ modId, projectName, modVersion }) {
     const safeId = makeModId(modId, projectName);
     const safeName = escapeToml(projectName);
-    const safeVersion = escapeToml(modVersion || '1.0.0');
+    const safeVersion = escapeToml(sanitizeVersion(modVersion));
     return `modLoader="lowcodefml"
 loaderVersion="[47,)"
 license="MIT"
@@ -251,18 +300,129 @@ side="BOTH"
 `;
   }
 
-  async function addFiles(output, files, sourcePrefix, outputPrefix, progress) {
-    const seen = new Set();
-    for (let index = 0; index < files.length; index += 1) {
-      const { entry, path } = files[index];
+  function buildPackMeta(projectName) {
+    return `${JSON.stringify({
+      pack: {
+        pack_format: TARGET_PACK_FORMAT,
+        description: `${projectName} · GameForge Lite Forge 1.20.1`
+      }
+    }, null, 2)}\n`;
+  }
+
+  function buildManifest() {
+    return [
+      'Manifest-Version: 1.0',
+      'Created-By: GameForge Lite',
+      'Implementation-Title: GameForge Generated Low-Code Mod',
+      '',
+      ''
+    ].join('\r\n');
+  }
+
+  async function addFiles(output, files, sourcePrefix, outputPrefix, outputPaths, onProgress) {
+    for (const { entry, path } of files) {
       const relative = normalizePath(path.slice(sourcePrefix.length));
       if (!relative) continue;
       const target = normalizePath(`${outputPrefix}${relative}`);
-      if (seen.has(target)) throw new Error(`输出路径重复：${target}`);
-      seen.add(target);
-      output.file(target, await entry.async('uint8array'));
-      progress(index + 1, files.length);
+
+      if (target !== target.toLowerCase()) {
+        throw new Error(`Minecraft 资源路径必须使用小写：${target}`);
+      }
+      if (outputPaths.has(target)) throw new Error(`输出路径重复：${target}`);
+      outputPaths.add(target);
+
+      if (/\.(json|mcmeta)$/i.test(target)) {
+        const text = await entry.async('string');
+        try {
+          JSON.parse(text);
+        } catch (error) {
+          throw new Error(`生成内容中存在无效 JSON：${target}`);
+        }
+        output.file(target, text);
+      } else {
+        output.file(target, await entry.async('uint8array'));
+      }
+      onProgress();
     }
+  }
+
+  function isPng(bytes) {
+    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    return bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
+  }
+
+  async function validateGeneratedJar(bytes, expectedModId) {
+    const jar = await window.JSZip.loadAsync(bytes, { createFolders: false });
+    const entries = getFileEntries(jar);
+    const paths = new Set(entries.map(({ path }) => path));
+
+    for (const required of REQUIRED_JAR_FILES) {
+      if (!paths.has(required)) throw new Error(`JAR 缺少必要文件：${required}`);
+    }
+    if ([...paths].some((path) => path.startsWith('datapack/') || path.startsWith('resourcepack/'))) {
+      throw new Error('JAR 内仍有 datapack/ 或 resourcepack/ 外层目录，结构没有正确扁平化。');
+    }
+
+    const dataPaths = [...paths].filter((path) => path.startsWith('data/'));
+    const assetPaths = [...paths].filter((path) => path.startsWith('assets/'));
+    if (!dataPaths.length && !assetPaths.length) throw new Error('JAR 内没有 data/ 或 assets/ 内容。');
+
+    const manifest = await jar.file('META-INF/MANIFEST.MF').async('string');
+    if (!/^Manifest-Version: 1\.0\r?$/m.test(manifest)) {
+      throw new Error('META-INF/MANIFEST.MF 缺少有效的 Manifest-Version。');
+    }
+
+    const modsToml = await jar.file('META-INF/mods.toml').async('string');
+    if (!/modLoader\s*=\s*"lowcodefml"/.test(modsToml)) {
+      throw new Error('mods.toml 未使用 lowcodefml。');
+    }
+    if (!modsToml.includes(`modId="${expectedModId}"`)) {
+      throw new Error('mods.toml 中的 Mod ID 与输出信息不一致。');
+    }
+    if (!modsToml.includes('versionRange="[1.20.1,1.20.2)"')) {
+      throw new Error('mods.toml 缺少 Minecraft 1.20.1 版本约束。');
+    }
+
+    const packMetaText = await jar.file('pack.mcmeta').async('string');
+    let packMeta;
+    try {
+      packMeta = JSON.parse(packMetaText);
+    } catch (error) {
+      throw new Error('JAR 根目录 pack.mcmeta 不是合法 JSON。');
+    }
+    if (Number(packMeta?.pack?.pack_format) !== TARGET_PACK_FORMAT) {
+      throw new Error(`JAR 根目录 pack.mcmeta 的 pack_format 必须为 ${TARGET_PACK_FORMAT}。`);
+    }
+    if (!packMeta?.pack?.description) {
+      throw new Error('JAR 根目录 pack.mcmeta 缺少 description。');
+    }
+
+    let jsonCount = 1;
+    let pngCount = 0;
+    for (const { entry, path } of entries) {
+      if (path === 'pack.mcmeta') continue;
+      if (/\.json$/i.test(path)) {
+        const text = await entry.async('string');
+        try {
+          JSON.parse(text);
+        } catch (error) {
+          throw new Error(`JAR 内存在无效 JSON：${path}`);
+        }
+        jsonCount += 1;
+      } else if (/\.png$/i.test(path)) {
+        const image = await entry.async('uint8array');
+        if (!isPng(image)) throw new Error(`JAR 内 PNG 文件损坏或格式不符：${path}`);
+        pngCount += 1;
+      }
+    }
+
+    return {
+      fileCount: entries.length,
+      dataCount: dataPaths.length,
+      assetCount: assetPaths.length,
+      jsonCount,
+      pngCount
+    };
   }
 
   async function convertToJar() {
@@ -273,24 +433,32 @@ side="BOTH"
 
     const projectName = ui.projectName.value.trim() || state.analysis.projectName;
     const modId = makeModId(ui.modId.value, `${projectName}:${state.file?.size || 0}`);
-    const modVersion = ui.modVersion.value.trim() || '1.0.0';
+    const modVersion = sanitizeVersion(ui.modVersion.value);
     ui.modId.value = modId;
-
+    ui.modVersion.value = modVersion;
     ui.convertButton.disabled = true;
-    setStatus('正在组装 Forge JAR…');
-    setProgress(20, '准备 JAR');
+    setStatus('正在组装并检查 Forge JAR…');
+    setProgress(16, '补全 JAR 元数据');
 
     try {
       const output = new window.JSZip();
-      output.file('META-INF/MANIFEST.MF', 'Manifest-Version: 1.0\r\nCreated-By: GameForge Lite\r\n\r\n');
-      output.file('META-INF/mods.toml', buildModsToml({ modId, projectName, modVersion }));
+      const outputPaths = new Set();
+      const addText = (path, content) => {
+        if (outputPaths.has(path)) throw new Error(`输出路径重复：${path}`);
+        outputPaths.add(path);
+        output.file(path, content);
+      };
+
+      addText('META-INF/MANIFEST.MF', buildManifest());
+      addText('META-INF/mods.toml', buildModsToml({ modId, projectName, modVersion }));
+      addText('pack.mcmeta', buildPackMeta(projectName));
 
       const totalFiles = state.analysis.dataFiles.length + state.analysis.assetFiles.length;
       let copied = 0;
       const onCopy = () => {
         copied += 1;
-        const percent = totalFiles ? 20 + (copied / totalFiles) * 48 : 68;
-        setProgress(percent, `复制内容 ${copied}/${totalFiles}`);
+        const percent = totalFiles ? 20 + (copied / totalFiles) * 45 : 65;
+        setProgress(percent, `检查并复制内容 ${copied}/${totalFiles}`);
       };
 
       await addFiles(
@@ -298,6 +466,7 @@ side="BOTH"
         state.analysis.dataFiles,
         `${state.analysis.root}datapack/data/`,
         'data/',
+        outputPaths,
         onCopy
       );
       await addFiles(
@@ -305,17 +474,18 @@ side="BOTH"
         state.analysis.assetFiles,
         `${state.analysis.root}resourcepack/assets/`,
         'assets/',
+        outputPaths,
         onCopy
       );
 
       if (state.analysis.projectPath) {
         const projectEntry = state.analysis.zip.file(state.analysis.projectPath);
         if (projectEntry) {
-          output.file('META-INF/gameforge/project.json', await projectEntry.async('uint8array'));
+          addText('META-INF/gameforge/project.json', await projectEntry.async('string'));
         }
       }
 
-      output.file('META-INF/gameforge/README.txt', [
+      addText('META-INF/gameforge/README.txt', [
         'GameForge Lite generated low-code Forge mod',
         '',
         'Minecraft: 1.20.1',
@@ -328,20 +498,22 @@ side="BOTH"
         'This packages the original datapack/resource-pack behavior; it does not compile arbitrary Java source.'
       ].join('\r\n'));
 
-      setProgress(72, '压缩 JAR');
-      const blob = await output.generateAsync(
+      setProgress(70, '压缩 JAR');
+      const bytes = await output.generateAsync(
         {
-          type: 'blob',
-          mimeType: 'application/java-archive',
+          type: 'uint8array',
           compression: 'DEFLATE',
           compressionOptions: { level: 6 },
           platform: 'DOS'
         },
         (metadata) => {
-          setProgress(72 + metadata.percent * 0.27, `压缩 ${Math.round(metadata.percent)}%`);
+          setProgress(70 + metadata.percent * 0.2, `压缩 ${Math.round(metadata.percent)}%`);
         }
       );
 
+      setProgress(92, '重新打开并验证 JAR');
+      const report = await validateGeneratedJar(bytes, modId);
+      const blob = new Blob([bytes], { type: 'application/java-archive' });
       const fileName = `${slugifyFileName(projectName)}-${modVersion}-forge-1.20.1.jar`;
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -352,8 +524,11 @@ side="BOTH"
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 
-      setProgress(100, '完成');
-      setStatus(`已生成 ${fileName}。把它放进 PCL 对应实例的 mods 文件夹即可测试。`, 'success');
+      setProgress(100, '结构验证通过');
+      setStatus(
+        `已生成并验证 ${fileName}：${report.fileCount} 个文件，data ${report.dataCount}，assets ${report.assetCount}，JSON ${report.jsonCount}，PNG ${report.pngCount}。`,
+        'success'
+      );
     } catch (error) {
       console.error(error);
       setStatus(error instanceof Error ? error.message : '转换失败。', 'error');
@@ -378,7 +553,6 @@ side="BOTH"
       state.root = result.root;
       state.project = result.project;
       state.analysis = result;
-
       ui.fileName.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
       ui.projectName.value = result.projectName;
       ui.modId.value = result.defaultModId;
@@ -386,7 +560,7 @@ side="BOTH"
       ui.convertButton.disabled = false;
       setProgress(100, '读取完成');
       window.setTimeout(resetProgress, 700);
-      setStatus('识别成功。点击“转换并下载 JAR”。', 'success');
+      setStatus('识别成功。转换时会补全 pack.mcmeta，并在下载前重新验证 JAR。', 'success');
     } catch (error) {
       console.error(error);
       ui.fileName.textContent = '尚未选择有效文件';
@@ -433,6 +607,8 @@ side="BOTH"
   ui.modId.addEventListener('blur', () => {
     ui.modId.value = makeModId(ui.modId.value, ui.projectName.value || 'gameforge');
   });
-
+  ui.modVersion.addEventListener('blur', () => {
+    ui.modVersion.value = sanitizeVersion(ui.modVersion.value);
+  });
   ui.convertButton.addEventListener('click', convertToJar);
 })();
