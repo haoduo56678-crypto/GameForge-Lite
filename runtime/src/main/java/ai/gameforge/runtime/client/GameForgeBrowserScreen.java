@@ -952,8 +952,8 @@ public final class GameForgeBrowserScreen extends Screen {
     private enum ButtonKind {
         PRIMARY(ACCENT, 0xFF07101F),
         SECONDARY(0xFF263650, TEXT),
-        SUCCESS(SUCCESS, 0xFF07101F),
-        DANGER(DANGER, 0xFF211015);
+        SUCCESS(GameForgeBrowserScreen.SUCCESS, 0xFF07101F),
+        DANGER(GameForgeBrowserScreen.DANGER, 0xFF211015);
 
         private final int color;
         private final int textColor;
