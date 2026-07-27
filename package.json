@@ -1,0 +1,13 @@
+{
+  "name": "gameforge-lite",
+  "version": "2.1.1",
+  "private": true,
+  "description": "Zero-cost Minecraft Java 1.20.1 creation studio",
+  "scripts": {
+    "build": "node scripts/build-release.js",
+    "start": "npm run build && node scripts/serve.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
