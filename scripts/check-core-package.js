@@ -7,7 +7,7 @@ const zlib = require('node:zlib');
 
 const ROOT = path.resolve(__dirname, '..');
 const PACKAGE_PATH = path.join(ROOT, 'extras', 'core-mechanisms.js.gz.b64');
-const EXPECTED_SOURCE_SHA256 = '87836ad996301c76c5ee22ff53986db82a41f8fff7cfbf55a1a6f87d62d8090b';
+const EXPECTED_SOURCE_SHA256 = '78e8b5ee4232dc283f154beb851a52c456fa4c92a44868c5baa1f738766dd5b1';
 
 if (!fs.existsSync(PACKAGE_PATH)) {
   throw new Error('Missing packaged GameForge core runtime.');
@@ -24,6 +24,7 @@ if (sha256 !== EXPECTED_SOURCE_SHA256) {
 
 const text = source.toString('utf8');
 for (const marker of [
+  "const CORE_VERSION = '1.1.0'",
   'Gen.__coreMechanismsInstalled = true',
   'gameforge/player_init.mcfunction',
   'gameforge/doctor.mcfunction',
