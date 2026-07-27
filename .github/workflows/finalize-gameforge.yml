@@ -31,18 +31,35 @@ jobs:
           cat .release/part-* | tr -d '\r\n' | base64 --decode > /tmp/gameforge-lite.tar.gz
           gzip -t /tmp/gameforge-lite.tar.gz
 
-          rm -rf /tmp/gameforge-site
-          mkdir -p /tmp/gameforge-site
-          tar -xzf /tmp/gameforge-lite.tar.gz -C /tmp/gameforge-site
-          test -f /tmp/gameforge-site/index.html
-          test -f /tmp/gameforge-site/js/core.js
-          test -f /tmp/gameforge-site/js/generators.js
-          test -f /tmp/gameforge-site/js/app.js
+          rm -rf /tmp/gameforge-release
+          mkdir -p /tmp/gameforge-release
+          tar -xzf /tmp/gameforge-lite.tar.gz -C /tmp/gameforge-release
+
+          SITE_ROOT=''
+          for candidate in \
+            /tmp/gameforge-release \
+            /tmp/gameforge-release/site \
+            /tmp/gameforge-release/GameForge-Lite-2.1-update/site; do
+            if [ -f "$candidate/index.html" ] && [ -f "$candidate/js/core.js" ]; then
+              SITE_ROOT="$candidate"
+              break
+            fi
+          done
+          if [ -z "$SITE_ROOT" ]; then
+            echo 'Could not locate the packaged site.' >&2
+            find /tmp/gameforge-release -maxdepth 4 -type f -print >&2
+            exit 1
+          fi
+          export SITE_ROOT
+
+          test -f "$SITE_ROOT/js/generators.js"
+          test -f "$SITE_ROOT/js/app.js"
 
           python3 - <<'PY'
+          import os
           from pathlib import Path
 
-          root = Path('/tmp/gameforge-site')
+          root = Path(os.environ['SITE_ROOT'])
 
           replacements = {
               'js/core.js': [("GF.VERSION = '2.1.0';", "GF.VERSION = '2.1.1';")],
@@ -82,15 +99,16 @@ jobs:
 ''', encoding='utf-8')
           PY
 
-          node --check /tmp/gameforge-site/js/core.js
-          node --check /tmp/gameforge-site/js/generators.js
-          node --check /tmp/gameforge-site/js/app.js
-          node --check /tmp/gameforge-site/sw.js
+          node --check "$SITE_ROOT/js/core.js"
+          node --check "$SITE_ROOT/js/generators.js"
+          node --check "$SITE_ROOT/js/app.js"
+          node --check "$SITE_ROOT/sw.js"
 
           python3 - <<'PY'
           import json
+          import os
           from pathlib import Path
-          root = Path('/tmp/gameforge-site')
+          root = Path(os.environ['SITE_ROOT'])
           json.loads((root / 'manifest.webmanifest').read_text(encoding='utf-8'))
           index = (root / 'index.html').read_text(encoding='utf-8')
           for ref in ('styles.css', 'js/core.js', 'js/generators.js', 'js/app.js'):
@@ -99,7 +117,7 @@ jobs:
           PY
 
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -a /tmp/gameforge-site/. .
+          cp -a "$SITE_ROOT"/. .
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
