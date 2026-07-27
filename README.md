@@ -13,6 +13,7 @@ GameForge Lite 是一个完全在浏览器本地运行的 Minecraft Java 1.20.1 
 - Forge 1.20.1 工具、物品、食物和方块源码生成
 - 项目保存、复制、导入、导出、文件预览与完整 ZIP 下载
 - 将 GameForge 完整 ZIP 在浏览器本地转换为 Forge 1.20.1 低代码 JAR
+- GameForge Runtime 0.2.0：像 JEI 一样浏览、搜索、查看配方并获取网站生成的内容
 - 游戏内首次进入初始化、普通玩家可点击菜单、配方自动解锁与完整操作入口
 - 自动诊断、16 项浏览器自测、日志错误分析与 PWA 离线缓存
 - 重复 ID、CustomModelData 和 ZIP 路径自动避让
@@ -82,6 +83,33 @@ create a cyberpunk dimension with low gravity and meteor storms
 
 首次初始化后，菜单也会显示一条普通玩家可用的 `/trigger` 命令。
 
+## GameForge Runtime GUI 0.2.0
+
+Runtime 是与网站配套的 Forge Mod。把 Runtime JAR 与作品 JAR 一起放进 `mods`，进入世界后按 `G` 打开内容浏览器。
+
+0.2.0 提供：
+
+- 跨多个 GameForge 作品的内容图标网格
+- 按名称、命名空间、ID、材料、触发方式和技能效果搜索
+- 武器、物品、方块、生物、Boss 和有配方内容分类
+- 真实 ItemStack 预览，并读取 `CustomModelData` 显示作品模型
+- 伤害、攻速、生命、护甲、载体、效果、冷却、范围等详情
+- 内置 3×3 配方查看器，显示最终 GameForge 物品而不是知识之书中转结果
+- 一键获取单件物品或召唤单个生物与 Boss
+- 项目菜单、获取全部、召唤全部、诊断和清理操作
+- 重复命名空间检测，提醒删除旧 JAR 副本
+- 简体中文与英文界面
+
+Runtime 的浏览器只负责 **GameForge 作品内容**，不会接管原版或其他 Mod 的完整配方数据库。它可以与 JEI 同时安装：JEI 继续负责整个模组包，Runtime 负责更准确地展示和操作 GameForge 低代码物品。
+
+下载文件：
+
+```text
+gameforge-runtime-1.20.1-0.2.0.jar
+```
+
+安装时请删除旧 Runtime JAR，只保留 0.2.0。多人游戏需要客户端与服务端安装相同版本的 Runtime 和作品 JAR。
+
 ## ZIP → JAR
 
 工作室右下角有 `ZIP → JAR` 入口。上传“下载作品”得到的完整 ZIP 后，转换器会：
@@ -92,6 +120,8 @@ create a cyberpunk dimension with low gravity and meteor storms
 4. 使用 Forge 1.20.1 的 `lowcodefml` 加载方式，不编译任意 Java 源码。
 5. 重新打开生成的 JAR，检查必要文件、目录结构、JSON、PNG、Mod ID 和 `pack_format: 15`。
 6. 验证通过后才开始下载；作品始终留在浏览器本地，不上传服务器。
+
+单组件作品的 JAR 默认使用武器、物品、生物或其他组件名称；多组件作品使用作品名称。更新同一作品时应删除旧 JAR，只保留最新版本，避免相同 Mod ID 和命名空间冲突。
 
 生成的 JAR 放进 PCL 对应 Forge 1.20.1 实例的 `mods` 文件夹。多人游戏时，服务端需要安装 JAR；需要贴图和模型的客户端也需要安装。
 
@@ -119,15 +149,16 @@ Vercel 会运行 `npm run build`，并把 `dist` 目录发布为静态网站。�
 
 ## 兼容边界
 
-- 原版生成器、本地词库、核心运行时和 ZIP → JAR 转换器面向 Minecraft Java 1.20.1 与 Forge 47.x。
+- 原版生成器、本地词库、Runtime、核心运行时和 ZIP → JAR 转换器面向 Minecraft Java 1.20.1、Forge 47.x 与 Java 17。
 - 词库识别范围已经大幅扩展，但识别到一个概念不等于对应大型生成模块已经完成；世界、维度、结构和系统仍会逐步增加模板。
 - 低代码 JAR 会把数据包与资源包作为 Mod 加载，但不会注册真正的新物品 ID；自定义内容使用原版载体、CustomModelData、函数和配方实现。
+- Runtime 可以准确展示 GameForge 元数据和作品配方，但不是 JEI 对所有第三方 Mod 的完整替代品。
 - Forge 源码导出仍用于真正注册新物品、方块或 Java 事件逻辑；需要这类能力时仍需构建源码项目。
 - 爆炸、循环函数、大范围指令和自定义实体应先在复制的测试世界运行。
 
 ## 测试状态
 
-JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出、Forge 源码结构、JAR 目录生成、本地词库和核心运行时已完成自动检查。基础词库与扩展词库分别执行回归测试；扩展测试覆盖口语武器、中文数字、原版物品别名、生物别名、状态效果以及世界和维度歧义识别。真实 Minecraft 行为继续由本地 Forge 1.20.1 环境验证。
+JavaScript、页面、移动端布局、JSON、ZIP、项目导入导出、Forge 源码结构、JAR 目录生成、本地词库和核心运行时已完成自动检查。基础词库与扩展词库分别执行回归测试；Runtime 0.2.0 已通过 Java 17、Forge 47.4.21 编译以及 JAR 结构和核心类检查。真实 Minecraft GUI、联机同步与不同模组组合仍继续通过本地 Forge 1.20.1 环境验证。
 
 ## License
 
