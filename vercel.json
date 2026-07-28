@@ -3,5 +3,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "git": {
+    "deploymentEnabled": {
+      "feature/**": false,
+      "fix/**": false,
+      "audit/**": false,
+      "chore/**": false,
+      "docs/**": false
+    }
+  }
 }
