@@ -18,7 +18,7 @@ let machine = GF.nativeSystems.createMachineComponent({
   recipeGrid: ['minecraft:iron_ingot','minecraft:redstone','minecraft:iron_ingot','minecraft:stone','minecraft:furnace','minecraft:stone','minecraft:iron_ingot','minecraft:redstone','minecraft:iron_ingot']
 });
 let fuelFreeMachine = GF.nativeSystems.createMachineComponent({
-  name: '免燃料压缩机', id: 'fuel_free_press', inputItem: 'minecraft:coal', inputCount: 9,
+  name: '3D 免燃料压缩机', id: '3d_press', inputItem: 'minecraft:coal', inputCount: 9,
   fuelItem: 'minecraft:air', fuelCount: 0, outputItem: 'minecraft:coal_block', outputCount: 1,
   processTicks: 40, color: '#4f5969', autoStart: true,
   recipeGrid: ['minecraft:iron_ingot','minecraft:piston','minecraft:iron_ingot','minecraft:stone','minecraft:redstone_block','minecraft:stone','minecraft:iron_ingot','minecraft:hopper','minecraft:iron_ingot']
@@ -38,6 +38,7 @@ for (const [label, component] of [['machine', machine], ['fuel-free machine', fu
   else entity = applied.component;
 }
 if (entity.spec.mobType !== 'undead') throw new Error('Entity MobType did not survive the Blueprint round trip.');
+if (fuelFreeMachine.spec.id !== '3d_press') throw new Error('Numeric registry ID did not survive the Blueprint round trip.');
 
 const project = GF.project.create({
   name: 'GameForge Native Systems Fixture', namespace: 'gameforge_native_systems_fixture',
