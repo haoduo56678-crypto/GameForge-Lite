@@ -93,5 +93,6 @@
   "message.gameforge_runtime.missing_function": "Project is missing runtime function: %s",
   "message.gameforge_runtime.missing_component_function": "No executable content function was found for: %s",
   "message.gameforge_runtime.executed": "Executed: %s",
-  "message.gameforge_runtime.component_executed": "%s completed: %s"
+  "message.gameforge_runtime.component_executed": "%s completed: %s",
+  "message.gameforge_runtime.weapon_triggered": "%s: %s (target: %s)"
 }
