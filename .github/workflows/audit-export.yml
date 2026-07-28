@@ -40,6 +40,7 @@ jobs:
           cp dist/js/generators.js audit-output/js/
           cp dist/js/app.js audit-output/js/
           cp dist/core-mechanisms.js audit-output/
+          cp dist/advanced-weapon-mechanics.js audit-output/
           cp dist/local-vocabulary.js audit-output/
           cp dist/vocabulary-data.js audit-output/
           cp dist/vocabulary-pack.js audit-output/
