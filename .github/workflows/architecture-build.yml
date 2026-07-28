@@ -6,8 +6,10 @@ on:
       - main
     paths:
       - 'architecture-v1/**'
-      - 'scripts/prepare-architecture-package.js'
-      - 'docs/ARCHITECTURE.md'
+      - 'extensions-v2/**'
+      - 'extras/**'
+      - 'scripts/**'
+      - 'docs/**'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
   push:
@@ -15,11 +17,17 @@ on:
       - main
     paths:
       - 'architecture-v1/**'
-      - 'scripts/prepare-architecture-package.js'
-      - 'docs/ARCHITECTURE.md'
+      - 'extensions-v2/**'
+      - 'extras/**'
+      - 'scripts/**'
+      - 'docs/**'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
   workflow_dispatch:
+
+concurrency:
+  group: gameforge-native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -27,7 +35,7 @@ permissions:
 jobs:
   website-and-native-project:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -62,16 +70,16 @@ jobs:
           path: architecture-site-build.log
           if-no-files-found: warn
 
-      - name: Export native Forge fixture
+      - name: Export baseline native Forge fixture
         run: node scripts/export-native-forge-fixture.js
 
-      - name: Compile generated Forge 1.20.1 project
+      - name: Compile baseline generated Forge project
         shell: bash
         run: |
           set -o pipefail
           gradle -p native-forge-fixture clean build --stacktrace --no-daemon 2>&1 | tee native-forge-build.log
 
-      - name: Verify generated project and JAR
+      - name: Verify baseline generated project and JAR
         shell: bash
         run: |
           set -euo pipefail
@@ -89,24 +97,94 @@ jobs:
           unzip -l "$JAR" | grep -q 'WeaponBehaviorHandler.class'
           echo "Verified generated native Forge JAR: $JAR"
 
-      - name: Upload generated Forge source fixture
+      - name: Export GUI, network, BlockEntity, EntityType and Goal AI fixture
+        run: node scripts/export-native-systems-fixture.js
+
+      - name: Compile generated native systems Forge project
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle -p native-systems-fixture clean build --stacktrace --no-daemon 2>&1 | tee native-systems-build.log
+
+      - name: Verify native systems source and JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='native-systems-fixture/src/main/java/com/gameforge/nativesystemsfixture'
+          test -f native-systems-fixture/build.gradle
+          test -f native-systems-fixture/gameforge-native-systems-report.json
+          test -f "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          test -f "$ROOT/systems/machine/GameForgeMachineMenu.java"
+          test -f "$ROOT/systems/machine/client/GameForgeMachineScreen.java"
+          test -f "$ROOT/systems/network/MachineNetwork.java"
+          test -f "$ROOT/systems/network/MachineActionPacket.java"
+          test -f "$ROOT/systems/network/MachineStatePacket.java"
+          test -f "$ROOT/systems/entity/GameForgeCustomMob.java"
+          test -f "$ROOT/systems/entity/client/GameForgeCustomMobRenderer.java"
+          grep -q 'ItemStackHandler(3)' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'saveAdditional' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'dirty && level.getGameTime() % 5L == 0L' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'definition().needsFuel() && matches' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'SimpleChannel' "$ROOT/systems/network/MachineNetwork.java"
+          grep -q 'PLAY_TO_SERVER' "$ROOT/systems/network/MachineNetwork.java"
+          grep -q 'PLAY_TO_CLIENT' "$ROOT/systems/network/MachineNetwork.java"
+          grep -q 'sender.containerMenu instanceof GameForgeMachineMenu' "$ROOT/systems/network/MachineActionPacket.java"
+          grep -q 'distanceToSqr' "$ROOT/systems/network/MachineActionPacket.java"
+          grep -q 'gameforgeMachineActionTick' "$ROOT/systems/network/MachineActionPacket.java"
+          grep -q 'DeferredRegister<EntityType<?>>' "$ROOT/systems/registry/SystemEntities.java"
+          grep -q 'RegistryObject<Block> _3D_PRESS' "$ROOT/systems/registry/SystemBlocks.java"
+          grep -q 'MeleeAttackGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q 'HurtByTargetGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q 'NearestAttackableTargetGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q 'case "undead" -> MobType.UNDEAD' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q '"undead"' "$ROOT/systems/entity/EntityDefinitions.java"
+          JAR="$(find native-systems-fixture/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' | head -n 1)"
+          test -n "$JAR"
+          unzip -t "$JAR"
+          for CLASS in NativeSystemsBootstrap GameForgeMachineBlockEntity GameForgeMachineMenu GameForgeMachineScreen MachineNetwork MachineActionPacket MachineStatePacket GameForgeCustomMob GameForgeCustomMobRenderer SystemEntities; do
+            unzip -l "$JAR" | grep -q "$CLASS.class"
+          done
+          unzip -l "$JAR" | grep -q 'assets/gameforge_native_systems_fixture/models/item/undead_guard_spawn_egg.json'
+          unzip -l "$JAR" | grep -q 'assets/gameforge_native_systems_fixture/models/item/3d_press.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_native_systems_fixture/loot_tables/blocks/star_forge.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_native_systems_fixture/loot_tables/blocks/3d_press.json'
+          echo "Verified generated native systems JAR: $JAR"
+
+      - name: Upload baseline Forge source fixture
         uses: actions/upload-artifact@v4
         with:
           name: gameforge-native-forge-source
           path: native-forge-fixture
           if-no-files-found: error
 
-      - name: Upload generated Forge JAR
+      - name: Upload baseline Forge JAR
         uses: actions/upload-artifact@v4
         with:
           name: gameforge-native-forge-jar
           path: native-forge-fixture/build/libs/*.jar
           if-no-files-found: error
 
-      - name: Upload native build log
+      - name: Upload native systems source fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-native-systems-source
+          path: native-systems-fixture
+          if-no-files-found: error
+
+      - name: Upload native systems JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-native-systems-jar
+          path: native-systems-fixture/build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gameforge-native-forge-build-log
-          path: native-forge-build.log
+          name: gameforge-native-build-logs
+          path: |
+            architecture-site-build.log
+            native-forge-build.log
+            native-systems-build.log
           if-no-files-found: warn
