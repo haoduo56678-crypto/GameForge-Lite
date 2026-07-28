@@ -1,0 +1,153 @@
+:root {
+  color-scheme: dark;
+  --bg: #07111c;
+  --panel: rgba(12, 25, 41, .9);
+  --panel-2: rgba(17, 34, 54, .9);
+  --line: rgba(147, 189, 232, .17);
+  --text: #eef7ff;
+  --muted: #91a9c2;
+  --blue: #73b6ff;
+  --cyan: #67e0d2;
+  --green: #79e2a8;
+  --red: #ff8294;
+  --shadow: 0 24px 70px rgba(0, 0, 0, .34);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html { min-width: 320px; background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(51, 131, 205, .22), transparent 31rem),
+    radial-gradient(circle at 88% 18%, rgba(65, 201, 164, .12), transparent 28rem),
+    linear-gradient(160deg, #06101b 0%, #081420 47%, #050b12 100%);
+}
+button, input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
+.wg-shell { width: min(1540px, calc(100% - 32px)); margin: 0 auto; padding: 18px 0 54px; }
+.wg-top {
+  display: flex; align-items: center; gap: 18px; min-height: 42px; padding: 0 4px;
+  color: var(--muted); font-size: 13px;
+}
+.wg-top a { color: #cae5ff; }
+.wg-top a:hover { color: #fff; }
+.wg-top span { margin-left: auto; }
+.wg-hero {
+  position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 38px;
+  align-items: end; margin: 10px 0 18px; padding: clamp(28px, 5vw, 64px);
+  border: 1px solid var(--line); border-radius: 30px; box-shadow: var(--shadow);
+  background:
+    linear-gradient(130deg, rgba(21, 60, 94, .86), rgba(9, 24, 40, .95) 58%, rgba(10, 42, 48, .9)),
+    repeating-linear-gradient(115deg, transparent 0 70px, rgba(255,255,255,.018) 70px 71px);
+}
+.wg-hero::after {
+  content: ""; position: absolute; width: 380px; height: 380px; right: -130px; top: -160px;
+  border-radius: 50%; border: 1px solid rgba(119, 214, 255, .18); box-shadow: 0 0 80px rgba(64, 176, 255, .12) inset;
+}
+.wg-kicker { color: var(--cyan); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 800; }
+.wg-hero h1 { margin: 12px 0 14px; font-size: clamp(38px, 6vw, 78px); line-height: .98; letter-spacing: -.055em; max-width: 920px; }
+.wg-hero h1 em { font-style: normal; color: transparent; background: linear-gradient(90deg, #8ac7ff, #70ead1); -webkit-background-clip: text; background-clip: text; }
+.wg-hero p { max-width: 880px; margin: 0; color: #bad0e5; font-size: clamp(14px, 1.4vw, 18px); line-height: 1.75; }
+.wg-hero-actions { position: relative; z-index: 1; display: grid; gap: 10px; min-width: 190px; }
+.wg-grid { display: grid; grid-template-columns: minmax(250px, .72fr) minmax(260px, .78fr) minmax(520px, 1.65fr); gap: 14px; align-items: start; }
+.wg-panel {
+  min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 18px;
+  background: linear-gradient(180deg, rgba(15, 31, 50, .94), rgba(8, 19, 32, .94));
+  box-shadow: 0 16px 42px rgba(0,0,0,.2);
+}
+.wg-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.018); }
+.wg-panel header strong { display: block; font-size: 15px; }
+.wg-panel header small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.wg-panel header > span { min-width: 30px; padding: 4px 8px; border-radius: 999px; text-align: center; color: var(--cyan); background: rgba(103,224,210,.1); }
+.wg-body { padding: 16px 18px 18px; }
+.wg-project-panel { grid-column: 1; }
+.wg-list-panel { grid-column: 2; }
+.wg-editor-panel { grid-column: 3; grid-row: 1 / span 2; }
+.wg-diagnostics-panel { grid-column: 1 / span 2; }
+.wg-field { display: grid; gap: 7px; min-width: 0; color: #aac0d4; font-size: 11px; font-weight: 700; }
+.wg-field input, .wg-field select, .wg-field textarea, textarea#promptInput {
+  width: 100%; border: 1px solid rgba(139, 184, 226, .2); border-radius: 10px; outline: none;
+  padding: 10px 11px; color: var(--text); background: rgba(4, 12, 21, .72); font-size: 13px;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+.wg-field input:focus, .wg-field select:focus, .wg-field textarea:focus, textarea#promptInput:focus { border-color: rgba(115,182,255,.78); box-shadow: 0 0 0 3px rgba(115,182,255,.1); background: rgba(7,18,31,.9); }
+textarea#promptInput { min-height: 116px; resize: vertical; line-height: 1.55; }
+.wg-body > .wg-field + .wg-field { margin-top: 13px; }
+.wg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.wg-button {
+  appearance: none; border: 1px solid rgba(139,184,226,.24); border-radius: 10px; padding: 9px 13px;
+  color: #dbeeff; background: rgba(18,42,65,.72); cursor: pointer; font-size: 12px; font-weight: 800;
+  transition: transform .15s, border-color .15s, background .15s;
+}
+.wg-button:hover { transform: translateY(-1px); border-color: rgba(139,201,255,.58); background: rgba(27,59,88,.86); }
+.wg-button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.wg-button.primary { color: #06111b; border-color: transparent; background: linear-gradient(135deg, #80c3ff, #69e4c7); }
+.wg-button.success { width: 100%; margin-top: 4px; color: #06130e; border-color: transparent; background: linear-gradient(135deg, #75e4a6, #68d8c5); }
+.wg-button.danger { color: #ffc1c9; border-color: rgba(255,112,132,.3); background: rgba(128,31,48,.24); }
+.wg-status { margin-top: 12px; padding: 10px 12px; border-radius: 10px; color: var(--muted); background: rgba(3,11,19,.6); font-size: 12px; line-height: 1.5; }
+.wg-status.good { color: #a8f0c8; background: rgba(43,139,91,.12); }
+.wg-status.error { color: #ffc0ca; background: rgba(173,50,70,.14); }
+.wg-component-list { display: grid; gap: 7px; max-height: 410px; padding: 11px; overflow: auto; }
+.wg-component {
+  display: grid; grid-template-columns: 36px minmax(0,1fr) auto; align-items: center; gap: 10px; width: 100%;
+  border: 1px solid transparent; border-radius: 12px; padding: 10px; color: var(--text); text-align: left;
+  background: rgba(5,14,24,.58); cursor: pointer;
+}
+.wg-component:hover { border-color: rgba(115,182,255,.28); }
+.wg-component.active { border-color: rgba(103,224,210,.58); background: rgba(31,77,83,.22); }
+.wg-component > span:first-child { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--cyan); background: rgba(103,224,210,.09); font-weight: 900; }
+.wg-component strong, .wg-component small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wg-component strong { font-size: 12px; }
+.wg-component small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.wg-component em { font-style: normal; color: #a5c5e2; font-size: 10px; }
+.wg-empty { padding: 28px 12px; color: var(--muted); text-align: center; font-size: 12px; }
+.wg-tabs { display: flex; gap: 6px; margin-bottom: 15px; padding: 4px; border-radius: 12px; background: rgba(2,9,16,.62); }
+.wg-tabs button { flex: 1; border: 0; border-radius: 8px; padding: 9px; color: var(--muted); background: transparent; cursor: pointer; font-size: 12px; font-weight: 800; }
+.wg-tabs button.active { color: #06131b; background: linear-gradient(135deg, #88c7ff, #70dfcf); }
+.wg-form { display: grid; gap: 12px; }
+.wg-row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 11px; }
+.wg-four { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; }
+.wg-check-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.wg-check { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px 10px; border: 1px solid rgba(139,184,226,.12); border-radius: 9px; color: #bacddd; background: rgba(5,14,24,.42); font-size: 11px; }
+.wg-check input { accent-color: #69dfc8; }
+fieldset { min-width: 0; margin: 0; border: 1px solid rgba(139,184,226,.15); border-radius: 12px; padding: 11px; }
+legend { padding: 0 7px; color: #a8bfd5; font-size: 11px; font-weight: 800; }
+.wg-colors { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px; }
+.wg-colors label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; }
+.wg-colors input { width: 100%; height: 36px; padding: 2px; border: 1px solid rgba(139,184,226,.18); border-radius: 8px; background: rgba(3,10,18,.6); }
+.wg-structures { display: flex; flex-wrap: wrap; gap: 8px; }
+.wg-structures legend { width: auto; }
+.wg-structures .wg-check { flex: 1 1 130px; }
+.wg-travel { display: grid; gap: 10px; }
+.wg-metrics { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 7px; margin-bottom: 11px; }
+.wg-metric { padding: 10px 7px; border: 1px solid rgba(139,184,226,.12); border-radius: 10px; text-align: center; background: rgba(4,12,21,.55); }
+.wg-metric strong, .wg-metric span { display: block; }
+.wg-metric strong { color: var(--cyan); font-size: 18px; }
+.wg-metric span { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.wg-diagnostics { display: grid; gap: 6px; max-height: 170px; overflow: auto; }
+.wg-diagnostic { padding: 9px 10px; border-left: 3px solid #7999bb; border-radius: 7px; color: #b9cbe0; background: rgba(6,15,25,.72); font-size: 11px; line-height: 1.45; }
+.wg-diagnostic.success { border-color: var(--green); color: #a9efc5; }
+.wg-diagnostic.warning { border-color: #e6c36e; color: #f2d896; }
+.wg-diagnostic.error { border-color: var(--red); color: #ffc0ca; }
+.wg-preview { max-height: 280px; margin: 12px 0 0; padding: 12px; overflow: auto; border: 1px solid rgba(139,184,226,.12); border-radius: 10px; color: #a8c8e6; background: #030a12; font: 10px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre; }
+@media (max-width: 1120px) {
+  .wg-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .wg-project-panel { grid-column: 1; }
+  .wg-list-panel { grid-column: 2; }
+  .wg-editor-panel { grid-column: 1 / -1; grid-row: auto; }
+  .wg-diagnostics-panel { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .wg-shell { width: min(100% - 18px, 1540px); padding-top: 8px; }
+  .wg-top { flex-wrap: wrap; gap: 10px; }
+  .wg-top span { width: 100%; margin: 0; }
+  .wg-hero { grid-template-columns: 1fr; padding: 27px 20px; border-radius: 20px; }
+  .wg-hero-actions { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .wg-grid { grid-template-columns: 1fr; }
+  .wg-project-panel, .wg-list-panel, .wg-editor-panel, .wg-diagnostics-panel { grid-column: 1; }
+  .wg-row, .wg-four, .wg-check-grid { grid-template-columns: 1fr; }
+  .wg-colors { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .wg-metrics { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}

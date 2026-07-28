@@ -35,7 +35,7 @@ permissions:
 jobs:
   website-and-native-project:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 70
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -150,6 +150,71 @@ jobs:
           unzip -l "$JAR" | grep -q 'data/gameforge_native_systems_fixture/loot_tables/blocks/3d_press.json'
           echo "Verified generated native systems JAR: $JAR"
 
+      - name: Export custom biome and playable dimension fixture
+        run: node scripts/export-worldgen-fixture.js
+
+      - name: Validate generated world registry JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          find worldgen-fixture/src/main/resources/data -type f -name '*.json' -print0 | while IFS= read -r -d '' FILE; do
+            python -m json.tool "$FILE" >/dev/null
+          done
+          grep -q 'minecraft:floating_islands' worldgen-fixture/src/main/resources/data/gameforge_worldgen_fixture/dimension/sky_archipelago.json
+          grep -q 'minecraft:flat' worldgen-fixture/src/main/resources/data/gameforge_worldgen_fixture/dimension/3d_void.json
+          grep -q 'gameforge_worldgen_fixture:ash_wastes_biome' worldgen-fixture/src/main/resources/data/minecraft/tags/worldgen/biome/has_structure/village_plains.json
+
+      - name: Compile generated worldgen Forge project
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle -p worldgen-fixture clean build --stacktrace --no-daemon 2>&1 | tee worldgen-build.log
+
+      - name: Verify worldgen source and JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='worldgen-fixture/src/main/java/com/gameforge/worldgenfixture'
+          test -f worldgen-fixture/gameforge-worldgen-report.json
+          test -f "$ROOT/worldgen/WorldgenBootstrap.java"
+          test -f "$ROOT/worldgen/registry/WorldgenItems.java"
+          test -f "$ROOT/worldgen/item/DimensionTravelItem.java"
+          grep -q 'ResourceKey.create(Registries.DIMENSION' "$ROOT/worldgen/item/DimensionTravelItem.java"
+          grep -q 'serverPlayer.teleportTo' "$ROOT/worldgen/item/DimensionTravelItem.java"
+          grep -q 'buildPlatform' "$ROOT/worldgen/item/DimensionTravelItem.java"
+          grep -q '_3D_VOID_KEY' "$ROOT/worldgen/registry/WorldgenItems.java"
+          JAR="$(find worldgen-fixture/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' | head -n 1)"
+          test -n "$JAR"
+          unzip -t "$JAR"
+          for CLASS in WorldgenBootstrap WorldgenItems DimensionTravelItem GameForgeCustomMob; do
+            unzip -l "$JAR" | grep -q "$CLASS.class"
+          done
+          unzip -l "$JAR" | grep -q 'data/gameforge_worldgen_fixture/worldgen/biome/ash_wastes_biome.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_worldgen_fixture/dimension_type/ash_wastes.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_worldgen_fixture/dimension/ash_wastes.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_worldgen_fixture/dimension/sky_archipelago.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_worldgen_fixture/dimension/3d_void.json'
+          echo "Verified generated worldgen JAR: $JAR"
+
+      - name: Start generated Forge server and verify dynamic registries
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          timeout --kill-after=20s 180s gradle -p worldgen-fixture runServer --args='nogui' --stacktrace --no-daemon 2>&1 | tee worldgen-server.log
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$STATUS" != "0" && "$STATUS" != "124" ]]; then
+            echo "Generated worldgen server exited unexpectedly with status $STATUS"
+            exit "$STATUS"
+          fi
+          grep -q 'Done (' worldgen-server.log
+          if grep -Eqi 'Failed to load registries|Errors in currently selected datapacks|Registry loading errors|Exception in server tick loop' worldgen-server.log; then
+            echo 'Generated worldgen server reported registry or datapack errors.'
+            exit 1
+          fi
+          echo 'Generated worldgen server loaded custom dimensions successfully.'
+
       - name: Upload baseline Forge source fixture
         uses: actions/upload-artifact@v4
         with:
@@ -178,7 +243,21 @@ jobs:
           path: native-systems-fixture/build/libs/*.jar
           if-no-files-found: error
 
-      - name: Upload build logs
+      - name: Upload worldgen source fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-worldgen-source
+          path: worldgen-fixture
+          if-no-files-found: error
+
+      - name: Upload worldgen JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-worldgen-jar
+          path: worldgen-fixture/build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Upload build and server logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -187,4 +266,6 @@ jobs:
             architecture-site-build.log
             native-forge-build.log
             native-systems-build.log
+            worldgen-build.log
+            worldgen-server.log
           if-no-files-found: warn

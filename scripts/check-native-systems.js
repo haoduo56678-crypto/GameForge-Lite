@@ -153,6 +153,7 @@ for (const marker of ['native-systems.js','native-systems-legacy-bridge.js','nat
 if (!(blueprintPage.indexOf('native-systems-blueprint.js') < blueprintPage.indexOf('blueprint-editor.js'))) throw new Error('Blueprint native systems extension loads after the editor.');
 for (const marker of ['native-systems.js','native-forge-page.js','真正的新 EntityType']) if (!forgePage.includes(marker)) throw new Error(`Native Forge page is missing updated native system support: ${marker}`);
 for (const marker of ['BlockEntity','SimpleChannel','EntityType','Goal AI','native-systems-page.js']) if (!systemsPage.includes(marker)) throw new Error(`Native systems studio page missing marker: ${marker}`);
-for (const marker of ['native-systems.html','native-systems.js','native-systems-blueprint.js','gameforge-lite-v2.1.1-native-systems-v1']) if (!sw.includes(marker)) throw new Error(`Service worker missing native systems asset: ${marker}`);
+for (const marker of ['native-systems.html','native-systems.js','native-systems-blueprint.js']) if (!sw.includes(marker)) throw new Error(`Service worker missing native systems asset: ${marker}`);
+if (!/const CACHE_NAME = 'gameforge-lite-v2\.1\.1-[^']+';/.test(sw)) throw new Error('Service worker cache version is missing or malformed.');
 
 console.log(`Native systems checks passed: ${output.files.length} generated files, machine GUI/network/BlockEntity and custom EntityType/Goal AI verified.`);
