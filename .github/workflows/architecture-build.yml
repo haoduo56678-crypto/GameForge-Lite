@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - 'architecture-v1/**'
-      - 'scripts/prepare-architecture-package.js'
+      - 'extensions-v2/**'
+      - 'extras/**'
+      - 'scripts/**'
       - 'docs/ARCHITECTURE.md'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
@@ -15,7 +17,9 @@ on:
       - main
     paths:
       - 'architecture-v1/**'
-      - 'scripts/prepare-architecture-package.js'
+      - 'extensions-v2/**'
+      - 'extras/**'
+      - 'scripts/**'
       - 'docs/ARCHITECTURE.md'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
@@ -27,7 +31,7 @@ permissions:
 jobs:
   website-and-native-project:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -53,6 +57,29 @@ jobs:
         run: |
           set -o pipefail
           npm run build 2>&1 | tee architecture-site-build.log
+
+      - name: Upload extracted architecture sources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-extracted-architecture-sources
+          path: |
+            extras/gameforge-ir.js
+            extras/gameforge-blueprint.js
+            extras/native-forge-generator.js
+            extras/blueprint-editor.js
+            extras/blueprint.html
+            extras/blueprint.css
+            extras/native-forge-page.js
+            extras/native-forge.html
+            extras/native-forge.css
+            extras/studio-entry.js
+            scripts/install-architecture.js
+            scripts/check-architecture.js
+            scripts/gameforge-test-context.js
+            scripts/export-native-forge-fixture.js
+            scripts/patch-test-report-architecture.js
+          if-no-files-found: error
 
       - name: Upload website architecture build log
         if: always()
