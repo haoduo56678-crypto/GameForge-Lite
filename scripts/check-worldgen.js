@@ -156,6 +156,7 @@ for (const marker of ['worldgen-core.js','worldgen-native.js','worldgen-blueprin
 if (!(blueprintPage.indexOf('worldgen-blueprint.js') < blueprintPage.indexOf('blueprint-editor.js'))) throw new Error('Worldgen Blueprint extension loads after the editor.');
 for (const marker of ['worldgen-core.js','worldgen-native.js','native-forge-page.js']) if (!forgePage.includes(marker)) throw new Error(`Native Forge page is missing worldgen integration: ${marker}`);
 for (const marker of ['World & Dimension Studio','可进入维度','worldgen-page.js']) if (!worldgenPage.includes(marker)) throw new Error(`Worldgen studio page missing marker: ${marker}`);
-for (const marker of ['worldgen.html','worldgen-core.js','worldgen-native.js','gameforge-lite-v2.1.1-worldgen-v1']) if (!sw.includes(marker)) throw new Error(`Service worker missing worldgen asset: ${marker}`);
+for (const marker of ['worldgen.html','worldgen-core.js','worldgen-native.js']) if (!sw.includes(marker)) throw new Error(`Service worker missing worldgen asset: ${marker}`);
+if (!/const CACHE_NAME = 'gameforge-lite-v2\.1\.1-[^']+';/.test(sw)) throw new Error('Service worker cache version is missing or malformed.');
 
 console.log(`Worldgen checks passed: ${output.files.length} generated files, 4 custom biomes, 4 playable dimensions, Blueprint and travel items verified.`);
