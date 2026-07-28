@@ -91,8 +91,11 @@ const assetEnd = sw.indexOf('];', assetStart);
 if (assetStart < 0 || assetEnd < 0) throw new Error('sw.js is missing the ASSETS array.');
 const missingAssets = nativeAssets.filter((asset) => !sw.includes(`'${asset}'`));
 if (missingAssets.length) {
+  const beforeEnd = sw.slice(0, assetEnd);
+  const arrayBody = sw.slice(assetStart + 'const ASSETS = ['.length, assetEnd).trim();
+  const separator = arrayBody && !arrayBody.endsWith(',') ? ',\n' : (arrayBody ? '\n' : '');
   const insertion = `${missingAssets.map((asset) => `  '${asset}',`).join('\n')}\n`;
-  sw = `${sw.slice(0, assetEnd)}${insertion}${sw.slice(assetEnd)}`;
+  sw = `${beforeEnd}${separator}${insertion}${sw.slice(assetEnd)}`;
 }
 fs.writeFileSync(swPath, sw, 'utf8');
 execFileSync(process.execPath, ['--check', swPath], { stdio: 'inherit' });
