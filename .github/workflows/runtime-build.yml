@@ -38,6 +38,14 @@ jobs:
         with:
           gradle-version: '8.8'
 
+      - name: Synchronize Runtime source version
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE='runtime/src/main/java/ai/gameforge/runtime/GameForgeRuntime.java'
+          sed -i 's/1\.20\.1-0\.2\.0/1.20.1-0.3.0/g' "$SOURCE"
+          grep -q 'public static final String VERSION = "1.20.1-0.3.0"' "$SOURCE"
+
       - name: Build Forge runtime
         shell: bash
         run: |
