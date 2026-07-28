@@ -1,0 +1,30 @@
+name: Final Website Build Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run verified production build
+        run: npm run build
+      - name: Verify advanced release report
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'Advanced weapon and Runtime 0.3.0 verification' dist/TEST-REPORT.md
+          grep -q 'actual Forge LivingDamageEvent attacker' dist/TEST-REPORT.md
+          grep -q 'advanced-weapon-context-patch.js' dist/index.html
+          grep -q 'runtime-v0.3.0' dist/runtime.html
