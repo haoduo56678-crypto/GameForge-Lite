@@ -25,6 +25,7 @@ let fuelFreeMachine = GF.nativeSystems.createMachineComponent({
 });
 let entity = GF.nativeSystems.createEntityComponent({
   name: '亡灵守卫', id: 'undead_guard', health: 40, damage: 7, speed: 0.28, armor: 3, followRange: 36,
+  mobType: 'undead',
   goals: ['float','melee_attack','random_stroll','look_at_player','random_look','hurt_by_target','nearest_player','leap_at_target'],
   targetPlayers: true, texture: 'minecraft:textures/entity/zombie/zombie.png', eggPrimary: '#334b2c', eggSecondary: '#7fa06d'
 });
@@ -36,6 +37,7 @@ for (const [label, component] of [['machine', machine], ['fuel-free machine', fu
   else if (label === 'fuel-free machine') fuelFreeMachine = applied.component;
   else entity = applied.component;
 }
+if (entity.spec.mobType !== 'undead') throw new Error('Entity MobType did not survive the Blueprint round trip.');
 
 const project = GF.project.create({
   name: 'GameForge Native Systems Fixture', namespace: 'gameforge_native_systems_fixture',
