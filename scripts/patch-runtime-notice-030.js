@@ -18,6 +18,11 @@ function replaceOnce(search, replacement, label) {
 
 if (!source.includes('精确命中高级技能需要 Runtime 0.3.0')) {
   replaceOnce(
+    "const SKIP_KEY = 'gameforge.runtime.notice.installed.v1';",
+    "const SKIP_KEY = 'gameforge.runtime.notice.installed.v2';",
+    'acknowledgement storage version'
+  );
+  replaceOnce(
     '温馨提示：建议先安装 Runtime GUI',
     '温馨提示：建议先安装 Runtime 0.3.0',
     'dialog title'
@@ -48,6 +53,11 @@ if (!source.includes('精确命中高级技能需要 Runtime 0.3.0')) {
     'honest compatibility note'
   );
   replaceOnce(
+    '<span>我已经安装 Runtime，以后下载作品时不再提示</span>',
+    '<span>我已经安装 Runtime 0.3.0 或更高版本，以后下载作品时不再提示</span>',
+    'acknowledgement checkbox'
+  );
+  replaceOnce(
     '先下载 Runtime GUI（推荐）',
     '先下载 Runtime 0.3.0（推荐）',
     'primary button'
@@ -55,15 +65,20 @@ if (!source.includes('精确命中高级技能需要 Runtime 0.3.0')) {
 }
 
 for (const marker of [
+  "gameforge.runtime.notice.installed.v2",
   '温馨提示：建议先安装 Runtime 0.3.0',
   '精确命中高级技能需要 Runtime 0.3.0',
   '亡灵秒杀、低生命斩杀、倍率伤害、吸血和精确目标条件不会生效',
   '转换器若显示“Runtime 必需”',
+  '我已经安装 Runtime 0.3.0 或更高版本',
   '先下载 Runtime 0.3.0（推荐）',
 ]) {
   if (!source.includes(marker)) throw new Error(`Runtime notice 0.3.0 marker missing: ${marker}`);
 }
+if (source.includes('gameforge.runtime.notice.installed.v1')) {
+  throw new Error('Runtime 0.3.0 notice still uses the old acknowledgement key and could be hidden for users who only installed Runtime 0.2.x.');
+}
 
 fs.writeFileSync(entryPath, source, 'utf8');
 execFileSync(process.execPath, ['--check', entryPath], { stdio: 'inherit' });
-console.log('Updated project-download notice for Runtime 0.3.0 advanced mechanics.');
+console.log('Updated project-download notice and acknowledgement version for Runtime 0.3.0 advanced mechanics.');
