@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080c17">
+  <title>GameForge 原生系统 · GUI、机器与自定义实体</title>
+  <meta name="description" content="可视化创建 Forge 1.20.1 自定义 GUI、网络同步、BlockEntity、真正的 EntityType 与基础 Goal AI。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="native-systems.css">
+</head>
+<body>
+  <main class="ns-shell">
+    <div class="ns-top"><a href="index.html">← 返回 GameForge</a><a href="blueprint.html">Blueprint</a><a href="native-forge.html">Java 工程</a><span>Forge 47.4.21 · Java 17</span></div>
+    <section class="ns-hero">
+      <div><span class="ns-kicker">Native Systems Studio</span><h1>机器 GUI 与<br>真正的自定义实体。</h1><p>机器会生成 BlockEntity、物品栏、Menu、Screen、NBT 存档和双向网络包；实体会注册新的 EntityType、属性、渲染器、刷怪蛋和可配置 Goal AI。</p></div>
+      <div class="ns-hero-actions"><a class="ns-button" id="blueprintLink" href="blueprint.html">打开 Blueprint</a><a class="ns-button primary" id="forgeLink" href="native-forge.html">生成 Java 工程</a></div>
+    </section>
+
+    <section class="ns-grid">
+      <article class="ns-panel ns-project-panel">
+        <header><div><strong>项目与一句话创建</strong><small>直接加入当前 GameForge 项目。</small></div></header>
+        <div class="ns-body">
+          <label class="ns-field"><span>当前项目</span><select id="projectSelect"></select></label>
+          <label class="ns-field"><span>一句话</span><textarea id="promptInput" placeholder="例如：做一个叫星核熔炼机的机器，用 minecraft:iron_ingot 和 minecraft:coal，输出 minecraft:gold_ingot，5秒完成"></textarea></label>
+          <div class="ns-actions"><button class="ns-button primary" id="parsePrompt">解析并加入</button><button class="ns-button" id="newMachine">新建机器</button><button class="ns-button" id="newEntity">新建实体</button></div>
+          <div class="ns-status" id="statusText">准备创建原生系统。</div>
+        </div>
+      </article>
+
+      <article class="ns-panel ns-list-panel">
+        <header><div><strong>原生系统组件</strong><small>点击组件后在右侧编辑。</small></div><span id="componentCount">0</span></header>
+        <div class="ns-component-list" id="componentList"></div>
+      </article>
+
+      <article class="ns-panel ns-editor-panel">
+        <header><div><strong id="editorTitle">组件编辑器</strong><small id="editorSubtitle">选择机器或实体。</small></div><button class="ns-button danger" id="deleteComponent" disabled>删除</button></header>
+        <div class="ns-body">
+          <div class="ns-tabs"><button class="active" data-tab="machine">机器 / BlockEntity</button><button data-tab="entity">自定义 EntityType</button></div>
+
+          <form id="machineForm" class="ns-form">
+            <div class="ns-row"><label class="ns-field"><span>名称</span><input id="machineName" value="星核熔炼机"></label><label class="ns-field"><span>注册 ID</span><input id="machineId" value="star_forge" spellcheck="false"></label></div>
+            <div class="ns-row"><label class="ns-field"><span>输入物品</span><input id="machineInput" value="minecraft:iron_ingot" spellcheck="false"></label><label class="ns-field small"><span>数量</span><input id="machineInputCount" type="number" value="1" min="1" max="64"></label></div>
+            <div class="ns-row"><label class="ns-field"><span>燃料物品</span><input id="machineFuel" value="minecraft:coal" spellcheck="false"></label><label class="ns-field small"><span>数量（0=无燃料）</span><input id="machineFuelCount" type="number" value="1" min="0" max="64"></label></div>
+            <div class="ns-row"><label class="ns-field"><span>输出物品</span><input id="machineOutput" value="minecraft:gold_ingot" spellcheck="false"></label><label class="ns-field small"><span>数量</span><input id="machineOutputCount" type="number" value="1" min="1" max="64"></label></div>
+            <div class="ns-row"><label class="ns-field"><span>处理时间（秒）</span><input id="machineSeconds" type="number" value="5" min="0.05" step="0.05"></label><label class="ns-field"><span>方块颜色</span><input id="machineColor" type="color" value="#6a8dff"></label></div>
+            <label class="ns-check"><input id="machineAutoStart" type="checkbox">放置后自动启动（否则由 GUI 按钮控制）</label>
+            <button class="ns-button success" type="submit">保存机器组件</button>
+          </form>
+
+          <form id="entityForm" class="ns-form" hidden>
+            <div class="ns-row"><label class="ns-field"><span>名称</span><input id="entityName" value="亡灵守卫"></label><label class="ns-field"><span>注册 ID</span><input id="entityId" value="undead_guard" spellcheck="false"></label></div>
+            <div class="ns-four"><label class="ns-field"><span>生命</span><input id="entityHealth" type="number" value="40" min="1"></label><label class="ns-field"><span>攻击</span><input id="entityDamage" type="number" value="7" min="0" step="0.5"></label><label class="ns-field"><span>速度</span><input id="entitySpeed" type="number" value="0.28" min="0.01" step="0.01"></label><label class="ns-field"><span>护甲</span><input id="entityArmor" type="number" value="2" min="0" step="0.5"></label></div>
+            <div class="ns-row"><label class="ns-field"><span>纹理资源</span><input id="entityTexture" value="minecraft:textures/entity/zombie/zombie.png" spellcheck="false"></label><label class="ns-field"><span>经验值</span><input id="entityExperience" type="number" value="10" min="0"></label></div>
+            <fieldset class="ns-goals"><legend>Goal AI</legend><div id="goalList"></div></fieldset>
+            <div class="ns-row"><label class="ns-check"><input id="entityTargetPlayers" type="checkbox" checked>主动寻找并攻击玩家</label><label class="ns-check"><input id="entityFireImmune" type="checkbox">免疫火焰</label><label class="ns-check"><input id="entityBoss" type="checkbox">Boss 标记</label></div>
+            <button class="ns-button success" type="submit">保存自定义实体</button>
+          </form>
+        </div>
+      </article>
+
+      <article class="ns-panel ns-diagnostics-panel">
+        <header><div><strong>生成能力与诊断</strong><small>基于同一份 GameForge IR。</small></div><button class="ns-button" id="refreshDiagnostics">刷新</button></header>
+        <div class="ns-body"><div class="ns-metrics" id="metrics"></div><div class="ns-diagnostics" id="diagnostics"></div><pre class="ns-preview" id="irPreview">等待项目…</pre></div>
+      </article>
+    </section>
+  </main>
+
+  <script src="js/core.js"></script>
+  <script src="js/generators.js"></script>
+  <script src="local-vocabulary.js"></script>
+  <script src="vocabulary-data.js"></script>
+  <script src="vocabulary-pack.js"></script>
+  <script src="core-mechanisms.js"></script>
+  <script src="advanced-weapon-mechanics.js"></script>
+  <script src="advanced-weapon-context-patch.js"></script>
+  <script src="gameforge-ir.js"></script>
+  <script src="gameforge-blueprint.js"></script>
+  <script src="native-forge-generator.js"></script>
+  <script src="native-systems.js"></script>
+  <script src="native-systems-blueprint.js"></script>
+  <script src="native-systems-page.js"></script>
+</body>
+</html>
