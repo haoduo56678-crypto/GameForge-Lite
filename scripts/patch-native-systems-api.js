@@ -134,10 +134,8 @@ replaceOnce(
   'normal custom mob persistence behavior'
 );
 replaceOnce(
-`        ResourceLocation configured = ResourceLocation.tryParse(entity.definition().texture());
-        return configured != null ? configured : new ResourceLocation("minecraft", "textures/entity/zombie/zombie.png");`,
-`        ResourceLocation configured = ResourceLocation.tryParse(entity.definition().texture());
-        return configured != null ? configured : java.util.Objects.requireNonNull(ResourceLocation.tryParse("minecraft:textures/entity/zombie/zombie.png"));`,
+  '    @Override public ResourceLocation getTextureLocation(GameForgeCustomMob entity) { ResourceLocation configured = ResourceLocation.tryParse(entity.definition().texture()); return configured != null ? configured : new ResourceLocation("minecraft", "textures/entity/zombie/zombie.png"); }',
+  '    @Override public ResourceLocation getTextureLocation(GameForgeCustomMob entity) { ResourceLocation configured = ResourceLocation.tryParse(entity.definition().texture()); return configured != null ? configured : java.util.Objects.requireNonNull(ResourceLocation.tryParse("minecraft:textures/entity/zombie/zombie.png")); }',
   'renderer fallback ResourceLocation'
 );
 
