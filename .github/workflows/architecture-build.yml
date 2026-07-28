@@ -1,0 +1,101 @@
+name: Verify IR Blueprint and Native Forge
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'architecture-v1/**'
+      - 'scripts/prepare-architecture-package.js'
+      - 'docs/ARCHITECTURE.md'
+      - 'package.json'
+      - '.github/workflows/architecture-build.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'architecture-v1/**'
+      - 'scripts/prepare-architecture-package.js'
+      - 'docs/ARCHITECTURE.md'
+      - 'package.json'
+      - '.github/workflows/architecture-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  website-and-native-project:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.8
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Build website and run architecture regressions
+        run: npm run build
+
+      - name: Export native Forge fixture
+        run: node scripts/export-native-forge-fixture.js
+
+      - name: Compile generated Forge 1.20.1 project
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle -p native-forge-fixture clean build --stacktrace --no-daemon 2>&1 | tee native-forge-build.log
+
+      - name: Verify generated project and JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f native-forge-fixture/build.gradle
+          test -f native-forge-fixture/gameforge-ir.json
+          test -f native-forge-fixture/src/main/java/com/gameforge/nativefixture/GameforgeNativeFixtureMod.java
+          grep -q 'LivingDamageEvent' native-forge-fixture/src/main/java/com/gameforge/nativefixture/logic/WeaponBehaviorHandler.java
+          grep -q 'MobType.UNDEAD' native-forge-fixture/src/main/java/com/gameforge/nativefixture/logic/WeaponBehaviorHandler.java
+          grep -q 'onPlayerTick' native-forge-fixture/src/main/java/com/gameforge/nativefixture/logic/WeaponBehaviorHandler.java
+          grep -q 'onPlayerLoggedIn' native-forge-fixture/src/main/java/com/gameforge/nativefixture/logic/WeaponBehaviorHandler.java
+          JAR="$(find native-forge-fixture/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' | head -n 1)"
+          test -n "$JAR"
+          unzip -t "$JAR"
+          unzip -l "$JAR" | grep -q 'META-INF/mods.toml'
+          unzip -l "$JAR" | grep -q 'WeaponBehaviorHandler.class'
+          echo "Verified generated native Forge JAR: $JAR"
+
+      - name: Upload generated Forge source fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-native-forge-source
+          path: native-forge-fixture
+          if-no-files-found: error
+
+      - name: Upload generated Forge JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-native-forge-jar
+          path: native-forge-fixture/build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Upload native build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-native-forge-build-log
+          path: native-forge-build.log
+          if-no-files-found: warn
