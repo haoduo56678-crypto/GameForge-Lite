@@ -7,7 +7,11 @@ const zlib = require('node:zlib');
 
 const ROOT = path.resolve(__dirname, '..');
 const PACKAGE_DIR = path.join(ROOT, 'architecture-v1');
-const EXPECTED_CHUNKS = ['chunk-00'];
+const EXPECTED_CHUNKS = [
+  'chunk-00', 'chunk-01', 'chunk-02', 'chunk-03',
+  'chunk-04', 'chunk-05', 'chunk-06', 'chunk-07',
+  'chunk-08', 'chunk-09', 'chunk-10', 'chunk-11',
+];
 const EXPECTED_SHA256 = 'd31ffffdd74cb19a0a2b42bf61a5195c4aa4ea08370c9fd31aceece97427d81d';
 const EXPECTED_FILES = new Set([
   'extras/blueprint-editor.js',
