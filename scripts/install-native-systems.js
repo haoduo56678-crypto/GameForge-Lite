@@ -79,18 +79,20 @@ fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
 const swPath = path.join(DIST, 'sw.js');
 let sw = fs.readFileSync(swPath, 'utf8');
 sw = sw.replace(/const CACHE_NAME = '[^']+';/, "const CACHE_NAME = 'gameforge-lite-v2.1.1-native-systems-v1';");
-for (const asset of [
+const nativeAssets = [
   './gameforge-ir.js','./gameforge-blueprint.js','./native-forge-generator.js',
   './blueprint.html','./blueprint.css','./blueprint-editor.js',
   './native-forge.html','./native-forge.css','./native-forge-page.js',
   './native-systems.js','./native-systems-legacy-bridge.js','./native-systems-blueprint.js',
   './native-systems.html','./native-systems.css','./native-systems-page.js','./native-systems-entry.js'
-]) {
-  if (!sw.includes(`  '${asset}',`)) {
-    const marker = "  './manifest.webmanifest'";
-    if (!sw.includes(marker)) throw new Error('sw.js is missing manifest asset insertion point.');
-    sw = sw.replace(marker, `  '${asset}',\n${marker}`);
-  }
+];
+const assetStart = sw.indexOf('const ASSETS = [');
+const assetEnd = sw.indexOf('];', assetStart);
+if (assetStart < 0 || assetEnd < 0) throw new Error('sw.js is missing the ASSETS array.');
+const missingAssets = nativeAssets.filter((asset) => !sw.includes(`'${asset}'`));
+if (missingAssets.length) {
+  const insertion = `${missingAssets.map((asset) => `  '${asset}',`).join('\n')}\n`;
+  sw = `${sw.slice(0, assetEnd)}${insertion}${sw.slice(assetEnd)}`;
 }
 fs.writeFileSync(swPath, sw, 'utf8');
 execFileSync(process.execPath, ['--check', swPath], { stdio: 'inherit' });
