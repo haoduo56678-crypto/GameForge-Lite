@@ -70,9 +70,9 @@ const generator = patchFile(generatorPath, [
     'entity component MobType'
   ],
   [
-`        armor: parseNumber(text, [/(?:护甲|護甲|armor)\s*[:：=]?\s*(\d+(?:\.\d+)?)/i], 2),
+String.raw`        armor: parseNumber(text, [/(?:护甲|護甲|armor)\s*[:：=]?\s*(\d+(?:\.\d+)?)/i], 2),
         goals,`,
-`        armor: parseNumber(text, [/(?:护甲|護甲|armor)\s*[:：=]?\s*(\d+(?:\.\d+)?)/i], 2),
+String.raw`        armor: parseNumber(text, [/(?:护甲|護甲|armor)\s*[:：=]?\s*(\d+(?:\.\d+)?)/i], 2),
         mobType: inferMobType(text),
         goals,`,
     'prompt MobType inference'
