@@ -134,6 +134,13 @@ public final class GameForgeItemFactory {
     public static String effectLabel(String effect) {
         if (effect == null || effect.isBlank() || effect.equalsIgnoreCase("none")) return "无";
         return switch (effect.toLowerCase(Locale.ROOT)) {
+            case "instant_kill" -> "一击必杀";
+            case "execute" -> "低生命斩杀";
+            case "damage_multiplier" -> "倍率伤害";
+            case "bonus_damage" -> "额外伤害";
+            case "lifesteal" -> "生命偷取";
+            case "knockback" -> "强力击退";
+            case "wither" -> "凋零";
             case "lightning" -> "召唤闪电";
             case "fire", "burn" -> "燃烧";
             case "freeze", "frozen" -> "冻结";
