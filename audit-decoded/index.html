@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1118" />
+  <meta name="description" content="GameForge Lite：完全在浏览器本地运行的 Minecraft Java 1.20.1 创作工作室。生成数据包、资源包、自定义武器、配方、掉落表、Boss 与 Forge Mod 源码。" />
+  <title>GameForge Lite · Minecraft 创作工作室</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div class="app-shell" id="appShell">
+    <header class="topbar">
+      <button class="icon-button mobile-only" id="mobileNavToggle" aria-label="打开工具列表">☰</button>
+      <button class="brand" data-go="home" aria-label="返回首页">
+        <span class="brand-mark" aria-hidden="true">GF</span>
+        <span><strong>GameForge</strong><small>Lite 2.1.1</small></span>
+      </button>
+      <div class="project-chip" title="当前项目">
+        <span class="status-dot"></span>
+        <span id="topProjectName">我的第一个作品</span>
+        <small id="saveStateText">已自动保存</small>
+      </div>
+      <div class="top-actions">
+        <button class="button ghost" id="newProjectTop">新建</button>
+        <button class="button ghost" id="openWorkspaceTop">工作区</button>
+        <button class="button primary" id="downloadBundleTop">下载作品</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar" aria-label="创作工具">
+      <div class="sidebar-scroll">
+        <div class="nav-group">
+          <p class="nav-label">开始</p>
+          <button class="nav-item active" data-page="home"><span>✦</span><span>智能创建</span></button>
+          <button class="nav-item" data-page="workspace"><span>▦</span><span>项目工作区</span><b class="nav-count" id="workspaceCount">0</b></button>
+          <button class="nav-item" data-page="projects"><span>◫</span><span>本地项目</span></button>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-label">玩家创作</p>
+          <button class="nav-item" data-page="weapon"><span>⚔</span><span>自定义武器</span></button>
+          <button class="nav-item" data-page="item"><span>◆</span><span>自定义物品</span></button>
+          <button class="nav-item" data-page="block"><span>▣</span><span>装饰方块</span></button>
+          <button class="nav-item" data-page="mob"><span>♜</span><span>生物与 Boss</span></button>
+          <button class="nav-item" data-page="command"><span>›_</span><span>指令生成器</span></button>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-label">数据包</p>
+          <button class="nav-item" data-page="recipe"><span>⌘</span><span>配方</span></button>
+          <button class="nav-item" data-page="loot"><span>◇</span><span>掉落表</span></button>
+          <button class="nav-item" data-page="function"><span>ƒ</span><span>函数</span></button>
+          <button class="nav-item" data-page="advancement"><span>★</span><span>进度</span></button>
+        </div>
+
+        <div class="nav-group">
+          <p class="nav-label">高级</p>
+          <button class="nav-item" data-page="resource"><span>▤</span><span>资源包物品</span></button>
+          <button class="nav-item" data-page="forge"><span>⬡</span><span>Forge Mod 源码</span></button>
+          <button class="nav-item" data-page="diagnostics"><span>✓</span><span>测试与修复</span><b class="nav-count warning" id="diagnosticCount">0</b></button>
+          <button class="nav-item" data-page="learn"><span>?</span><span>学习与安装</span></button>
+        </div>
+      </div>
+      <div class="sidebar-foot">
+        <div class="local-card"><span>●</span><div><strong>零服务器成本</strong><small>生成与保存全部在本机完成</small></div></div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <section class="page active" id="page-home" data-title="智能创建">
+        <div class="hero-panel">
+          <div class="hero-copy">
+            <span class="kicker">Minecraft Java 1.20.1 · 本地智能解析</span>
+            <h1>把一句想法，变成<br><em>真正能下载的作品。</em></h1>
+            <p>不需要 Java，不需要 API Key。描述你想做的内容，GameForge 会先拆解需求，再用稳定模板生成数据包、资源包或 Forge 源码。</p>
+          </div>
+          <div class="hero-metrics">
+            <div><strong id="homeComponentCount">0</strong><span>项目组件</span></div>
+            <div><strong id="homeFileCount">0</strong><span>生成文件</span></div>
+            <div><strong id="homeIssueCount">0</strong><span>待处理问题</span></div>
+          </div>
+        </div>
+
+        <div class="creator-card">
+          <div class="creator-topline">
+            <div><span class="spark">✦</span><strong>你今天想创造什么？</strong></div>
+            <span class="local-badge">LOCAL · 不消耗 Token</span>
+          </div>
+          <textarea id="smartPrompt" rows="4" placeholder="例如：做一把叫雷霆之刃的武器，右键在前方召唤闪电，冷却 5 秒，伤害 12，还要合成配方。"></textarea>
+          <div class="prompt-examples" aria-label="示例提示词">
+            <button data-prompt="做一把叫雷霆之刃的武器，右键召唤闪电，冷却 5 秒，伤害 12，还要合成配方。">雷霆之刃</button>
+            <button data-prompt="做一个火焰法杖，右键点燃前方敌人，冷却 3 秒。">火焰法杖</button>
+            <button data-prompt="生成一只 200 血的巨型僵尸 Boss，名字叫废土守卫，死亡后 35% 掉下界合金锭。">僵尸 Boss</button>
+            <button data-prompt="做一个蓝色发光装饰方块，拿在手里右键放置。">装饰方块</button>
+            <button data-prompt="做一个 Forge 1.20.1 的红宝石剑 Mod，伤害 10，耐久 1800。">Forge 红宝石剑</button>
+          </div>
+          <div class="creator-actions">
+            <button class="button secondary" id="smartAnalyze">分析想法</button>
+            <button class="button primary large" id="smartCreate">✦ 直接创建</button>
+          </div>
+
+          <div class="smart-plan" id="smartPlan" hidden>
+            <div class="plan-head">
+              <div><span class="plan-icon" id="smartPlanIcon">⚔</span><div><strong id="smartPlanTitle">自定义武器</strong><small id="smartPlanSubtitle">将生成数据包与资源包</small></div></div>
+              <span class="confidence" id="smartConfidence">本地解析 90%</span>
+            </div>
+            <div class="plan-grid" id="smartPlanGrid"></div>
+            <div class="plan-note" id="smartPlanNote"></div>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <div><span class="kicker">快速模板</span><h2>从能运行的成品开始</h2></div>
+          <p>点击后会把完整组件加入当前项目，你仍然可以继续编辑和组合。</p>
+        </div>
+        <div class="template-grid">
+          <button class="template-card" data-template="thunder_blade"><span class="template-icon violet">⚡</span><strong>雷霆之刃</strong><small>右键召唤闪电 · 冷却 · 自定义纹理</small><i>数据包 + 资源包</i></button>
+          <button class="template-card" data-template="fire_staff"><span class="template-icon orange">🔥</span><strong>烈焰法杖</strong><small>点燃前方目标 · 粒子与音效</small><i>数据包 + 资源包</i></button>
+          <button class="template-card" data-template="healing_totem"><span class="template-icon green">✚</span><strong>治愈图腾</strong><small>右键恢复生命 · 8 秒冷却</small><i>数据包 + 资源包</i></button>
+          <button class="template-card" data-template="boss_zombie"><span class="template-icon red">☠</span><strong>废土守卫</strong><small>200 血 Boss · Bossbar · 自定义掉落</small><i>数据包</i></button>
+          <button class="template-card" data-template="diamond_cow"><span class="template-icon blue">◇</span><strong>钻石牛掉落</strong><small>牛死亡时独立概率掉钻石</small><i>掉落表</i></button>
+          <button class="template-card" data-template="magic_block"><span class="template-icon cyan">▣</span><strong>星辉方块</strong><small>右键放置显示实体装饰方块</small><i>数据包 + 资源包</i></button>
+          <button class="template-card" data-template="forge_ruby_sword"><span class="template-icon pink">⬡</span><strong>Forge 红宝石剑</strong><small>真正注册的新物品与源码项目</small><i>Forge 源码</i></button>
+          <button class="template-card" data-template="starter_pack"><span class="template-icon gold">✦</span><strong>完整试玩包</strong><small>武器、Boss、配方、进度一次加入</small><i>组合项目</i></button>
+        </div>
+
+        <div class="home-bottom-grid">
+          <article class="info-card">
+            <span class="card-label">当前项目</span>
+            <h3 id="homeProjectName">我的第一个作品</h3>
+            <p id="homeProjectDescription">还没有组件。先从上面的智能创建或模板开始。</p>
+            <div class="inline-actions"><button class="button ghost" data-go="workspace">查看文件</button><button class="button ghost" data-go="projects">管理项目</button></div>
+          </article>
+          <article class="info-card accent-card">
+            <span class="card-label">建议测试顺序</span>
+            <ol><li>先下载数据包并执行 <code>/reload</code></li><li>再启用资源包并执行生成的给予函数</li><li>最后回到“测试与修复”贴入报错</li></ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="page" id="page-weapon" data-title="自定义武器工作室">
+        <div class="page-head">
+          <div><span class="kicker">Vanilla Creator</span><h1>自定义武器工作室</h1><p>使用原版数据包与资源包，让玩家获得带技能、冷却、伤害属性和自定义外观的武器。</p></div>
+          <button class="button primary" id="weaponAddTop">加入项目</button>
+        </div>
+        <div class="editor-layout">
+          <div class="form-card">
+            <div class="card-title"><span>01</span><div><h2>身份与外观</h2><p>所有 ID 只使用小写英文、数字和下划线。</p></div></div>
+            <div class="form-grid two">
+              <label>内部 ID<input id="weaponId" value="thunder_blade" data-clean="id" /></label>
+              <label>显示名称<input id="weaponName" value="雷霆之刃" /></label>
+              <label class="full">Lore 描述<input id="weaponLore" value="右键释放雷霆之力" /></label>
+              <label>视觉类型<select id="weaponVisual"><option value="sword">剑</option><option value="axe">斧</option><option value="staff">法杖</option><option value="wand">魔杖</option><option value="hammer">战锤</option><option value="dagger">匕首</option></select></label>
+              <label>模型编号<input id="weaponModelData" type="number" min="1" value="1001" /></label>
+              <label>主题颜色<input id="weaponColor" type="color" value="#69d8ff" /></label>
+              <label>纹理 PNG<input id="weaponTexture" type="file" accept="image/png" /></label>
+            </div>
+            <div class="texture-row">
+              <canvas id="weaponTextureCanvas" width="128" height="128" aria-label="武器纹理预览"></canvas>
+              <div><strong>像素纹理预览</strong><p>上传 PNG，或让网站生成一个可直接放入资源包的 16×16 像素纹理。</p><button class="button ghost" id="weaponGenerateTexture">重新生成纹理</button></div>
+            </div>
+          </div>
+
+          <aside class="preview-card sticky-preview">
+            <span class="card-label">游戏内预览</span>
+            <div class="minecraft-preview">
+              <canvas id="weaponBigPreview" width="224" height="224"></canvas>
+              <div class="mc-tooltip">
+                <strong id="weaponPreviewName">雷霆之刃</strong>
+                <span id="weaponPreviewLore">右键释放雷霆之力</span>
+                <em id="weaponPreviewStats">12 攻击伤害 · 5 秒冷却</em>
+              </div>
+            </div>
+            <div class="preview-code"><small>给予函数</small><code id="weaponGivePreview">/function gameforge:weapon/thunder_blade/give</code></div>
+          </aside>
+
+          <div class="form-card">
+            <div class="card-title"><span>02</span><div><h2>属性与技能</h2><p>右键技能使用可检测的载体物品，并由资源包显示成你的武器。</p></div></div>
+            <div class="form-grid two">
+              <label>触发方式<select id="weaponTrigger"><option value="right_click">右键释放技能（推荐）</option><option value="on_hit">攻击命中触发</option><option value="passive">无主动技能</option></select></label>
+              <label>技能效果<select id="weaponEffect"><option value="lightning">召唤闪电</option><option value="fire">点燃目标</option><option value="explosion">爆炸</option><option value="poison">中毒</option><option value="freeze">冻结减速</option><option value="heal">治疗自己</option><option value="dash">向前突进</option><option value="summon_wolf">召唤驯服狼</option></select></label>
+              <label>攻击伤害<input id="weaponDamage" type="number" min="1" max="100" step="0.5" value="12" /></label>
+              <label>攻击速度<input id="weaponAttackSpeed" type="number" min="0.1" max="4" step="0.1" value="1.6" /></label>
+              <label>冷却（秒）<input id="weaponCooldown" type="number" min="0" max="120" step="0.5" value="5" /></label>
+              <label>作用距离<input id="weaponRange" type="number" min="1" max="30" value="6" /></label>
+              <label>技能强度<input id="weaponPower" type="number" min="1" max="10" value="3" /></label>
+              <label>附魔等级<input id="weaponEnchant" type="number" min="0" max="10" value="3" /></label>
+            </div>
+            <div class="switch-grid">
+              <label class="switch"><input id="weaponUnbreakable" type="checkbox" checked><span></span><b>不可损坏</b></label>
+              <label class="switch"><input id="weaponGlow" type="checkbox" checked><span></span><b>附魔光效</b></label>
+              <label class="switch"><input id="weaponRecipeEnabled" type="checkbox" checked><span></span><b>生成合成配方</b></label>
+              <label class="switch"><input id="weaponParticles" type="checkbox" checked><span></span><b>技能粒子与音效</b></label>
+            </div>
+          </div>
+
+          <div class="form-card full-span" id="weaponRecipeCard">
+            <div class="card-title"><span>03</span><div><h2>合成配方</h2><p>每格填一个物品 ID。自定义 NBT 结果会由 recipe_crafted 进度触发并替换。</p></div></div>
+            <div class="recipe-builder">
+              <div class="craft-grid" id="weaponCraftGrid">
+                <input value="minecraft:diamond" aria-label="配方第1格"><input value="minecraft:nether_star" aria-label="配方第2格"><input value="minecraft:diamond" aria-label="配方第3格">
+                <input value="" aria-label="配方第4格"><input value="minecraft:lightning_rod" aria-label="配方第5格"><input value="" aria-label="配方第6格">
+                <input value="" aria-label="配方第7格"><input value="minecraft:blaze_rod" aria-label="配方第8格"><input value="" aria-label="配方第9格">
+              </div>
+              <div class="craft-arrow">→</div>
+              <div class="craft-result"><canvas id="weaponResultIcon" width="64" height="64"></canvas><strong id="weaponRecipeResultName">雷霆之刃</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>将生成：</strong><span>数据包、资源包、给予函数、技能函数、冷却系统、可选合成配方与安装说明</span></div><button class="button primary large" id="weaponAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-item" data-title="自定义物品">
+        <div class="page-head"><div><span class="kicker">Vanilla Creator</span><h1>自定义物品</h1><p>制作带名称、Lore、模型、光效和配方的原版自定义物品。</p></div><button class="button primary" id="itemAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="card-title"><span>01</span><div><h2>物品设置</h2></div></div>
+            <div class="form-grid two">
+              <label>内部 ID<input id="itemId" value="star_crystal" data-clean="id" /></label>
+              <label>显示名称<input id="itemName" value="星辉水晶" /></label>
+              <label>基础物品<input id="itemBase" value="minecraft:amethyst_shard" list="minecraftItems" /></label>
+              <label>数量<input id="itemCount" type="number" min="1" max="64" value="1" /></label>
+              <label class="full">Lore 描述<input id="itemLore" value="一枚储存着星光的水晶" /></label>
+              <label>模型类型<select id="itemModelStyle"><option value="generated">平面物品</option><option value="handheld">手持工具</option><option value="cube">立方体</option></select></label>
+              <label>模型编号<input id="itemModelData" type="number" min="1" value="1101" /></label>
+              <label>主题颜色<input id="itemColor" type="color" value="#c886ff" /></label>
+              <label>纹理 PNG<input id="itemTexture" type="file" accept="image/png" /></label>
+            </div>
+            <div class="switch-grid">
+              <label class="switch"><input id="itemGlow" type="checkbox" checked><span></span><b>附魔光效</b></label>
+              <label class="switch"><input id="itemUnbreakable" type="checkbox"><span></span><b>不可损坏</b></label>
+              <label class="switch"><input id="itemRecipeEnabled" type="checkbox" checked><span></span><b>生成配方</b></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">纹理预览</span><canvas class="large-canvas" id="itemTextureCanvas" width="224" height="224"></canvas><button class="button ghost full-button" id="itemGenerateTexture">生成像素纹理</button><div class="mc-tooltip standalone"><strong id="itemPreviewName">星辉水晶</strong><span id="itemPreviewLore">一枚储存着星光的水晶</span></div></aside>
+          <div class="form-card full-span">
+            <div class="card-title"><span>02</span><div><h2>合成配方</h2><p>留空代表空气。</p></div></div>
+            <div class="recipe-builder"><div class="craft-grid" id="itemCraftGrid">
+              <input value="minecraft:amethyst_shard"><input value="minecraft:glowstone_dust"><input value="minecraft:amethyst_shard">
+              <input value="minecraft:glowstone_dust"><input value="minecraft:nether_star"><input value="minecraft:glowstone_dust">
+              <input value="minecraft:amethyst_shard"><input value="minecraft:glowstone_dust"><input value="minecraft:amethyst_shard">
+            </div><div class="craft-arrow">→</div><div class="craft-result"><canvas id="itemResultIcon" width="64" height="64"></canvas><strong id="itemRecipeResultName">星辉水晶</strong></div></div>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>原版限制：</strong><span>这会复用一个原版基础物品，但名称、NBT 和资源包模型都是独立的。</span></div><button class="button primary large" id="itemAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-block" data-title="装饰方块">
+        <div class="page-head"><div><span class="kicker">Display Entity Kit</span><h1>装饰方块工作室</h1><p>用 1.20.1 的 item_display 与隐藏碰撞方块实现自定义装饰方块，无需 Forge。</p></div><button class="button primary" id="blockAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="card-title"><span>01</span><div><h2>方块设置</h2></div></div>
+            <div class="form-grid two">
+              <label>内部 ID<input id="blockId" value="starlight_block" data-clean="id" /></label>
+              <label>显示名称<input id="blockName" value="星辉方块" /></label>
+              <label>载体物品<select id="blockCarrier"><option value="minecraft:warped_fungus_on_a_stick">诡异菌钓竿（可检测右键）</option><option value="minecraft:carrot_on_a_stick">胡萝卜钓竿</option></select></label>
+              <label>碰撞方块<select id="blockCollision"><option value="minecraft:barrier">屏障（完整碰撞）</option><option value="minecraft:light">光源（无碰撞）</option><option value="minecraft:structure_void">结构空位（无碰撞）</option></select></label>
+              <label>模型编号<input id="blockModelData" type="number" min="1" value="1201" /></label>
+              <label>放置距离<input id="blockDistance" type="number" min="1" max="8" value="3" /></label>
+              <label>缩放<input id="blockScale" type="number" min="0.25" max="4" step="0.05" value="1" /></label>
+              <label>主题颜色<input id="blockColor" type="color" value="#48e0d1" /></label>
+              <label class="full">纹理 PNG<input id="blockTexture" type="file" accept="image/png" /></label>
+            </div>
+            <div class="switch-grid">
+              <label class="switch"><input id="blockGlow" type="checkbox" checked><span></span><b>显示实体发光</b></label>
+              <label class="switch"><input id="blockGravity" type="checkbox"><span></span><b>受重力影响</b></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">方块纹理</span><canvas class="large-canvas pixelated" id="blockTextureCanvas" width="224" height="224"></canvas><button class="button ghost full-button" id="blockGenerateTexture">生成方块纹理</button><div class="preview-code"><small>使用方式</small><code id="blockUsePreview">拿着星辉方块右键放置</code></div></aside>
+          <div class="form-card full-span">
+            <div class="notice-box"><strong>自动生成的交互</strong><p>右键会在视线前方对齐方格、放置碰撞方块并召唤显示实体；同时生成 <code>remove</code> 函数用于移除最近的同类方块。</p></div>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>说明：</strong><span>这是原版装饰方块方案。真正进入方块注册表的新方块请使用 Forge Mod 生成器。</span></div><button class="button primary large" id="blockAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-mob" data-title="生物与 Boss">
+        <div class="page-head"><div><span class="kicker">Entity Preset</span><h1>生物与 Boss</h1><p>基于原版实体生成自定义属性、装备、Bossbar、粒子和专属掉落。</p></div><button class="button primary" id="mobAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="card-title"><span>01</span><div><h2>实体属性</h2></div></div>
+            <div class="form-grid two">
+              <label>内部 ID<input id="mobId" value="wasteland_guardian" data-clean="id" /></label>
+              <label>显示名称<input id="mobName" value="废土守卫" /></label>
+              <label>基础实体<input id="mobBase" value="minecraft:zombie" list="minecraftEntities" /></label>
+              <label>生命值<input id="mobHealth" type="number" min="1" max="10000" value="200" /></label>
+              <label>攻击伤害<input id="mobDamage" type="number" min="0" max="1000" value="16" /></label>
+              <label>移动速度<input id="mobSpeed" type="number" min="0" max="2" step="0.01" value="0.28" /></label>
+              <label>护甲<input id="mobArmor" type="number" min="0" max="30" value="10" /></label>
+              <label>追踪距离<input id="mobFollowRange" type="number" min="1" max="128" value="48" /></label>
+              <label>主手物品<input id="mobMainHand" value="minecraft:netherite_axe" list="minecraftItems" /></label>
+              <label>头部装备<input id="mobHead" value="minecraft:netherite_helmet" list="minecraftItems" /></label>
+            </div>
+            <div class="switch-grid">
+              <label class="switch"><input id="mobBoss" type="checkbox" checked><span></span><b>显示 Bossbar</b></label>
+              <label class="switch"><input id="mobGlow" type="checkbox" checked><span></span><b>发光轮廓</b></label>
+              <label class="switch"><input id="mobPersistent" type="checkbox" checked><span></span><b>不会自然消失</b></label>
+              <label class="switch"><input id="mobSilent" type="checkbox"><span></span><b>静音</b></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">生成预览</span><div class="mob-avatar" id="mobAvatar">☠</div><h3 id="mobPreviewName">废土守卫</h3><div class="bossbar-preview"><span id="mobBossbarFill"></span></div><div class="stat-list"><div><span>生命</span><b id="mobPreviewHealth">200</b></div><div><span>伤害</span><b id="mobPreviewDamage">16</b></div><div><span>速度</span><b id="mobPreviewSpeed">0.28</b></div></div><div class="preview-code"><small>召唤函数</small><code id="mobSummonPreview">/function gameforge:mob/wasteland_guardian/spawn</code></div></aside>
+          <div class="form-card full-span">
+            <div class="card-title"><span>02</span><div><h2>掉落设置</h2><p>每行：物品ID, 概率%, 最少数量, 最多数量</p></div></div>
+            <textarea id="mobDrops" rows="5">minecraft:netherite_ingot,35,1,1
+minecraft:diamond,75,2,5
+minecraft:rotten_flesh,100,4,12</textarea>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>将生成：</strong><span>召唤函数、Bossbar 更新、实体属性 NBT、专属掉落表和清理函数。</span></div><button class="button primary large" id="mobAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-command" data-title="指令生成器">
+        <div class="page-head"><div><span class="kicker">Command Builder</span><h1>指令生成器</h1><p>生成并解释常用复杂指令，也可以把结果保存为项目中的函数。</p></div></div>
+        <div class="split-editor">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>指令类型<select id="commandType"><option value="give">给予物品</option><option value="summon">召唤实体</option><option value="effect">给予效果</option><option value="teleport">传送</option><option value="fill">区域填充</option><option value="title">屏幕标题</option><option value="particle">粒子</option><option value="playsound">播放声音</option><option value="execute">在目标位置执行</option></select></label>
+              <label>目标选择器<input id="commandTarget" value="@p" /></label>
+              <label>ID / 内容<input id="commandId" value="minecraft:diamond_sword" /></label>
+              <label>数量 / 时长<input id="commandAmount" type="number" value="1" /></label>
+              <label>显示名称 / 文本<input id="commandName" value="雷霆之刃" /></label>
+              <label>额外值 / 等级<input id="commandExtra" value="10" /></label>
+              <label>坐标 X<input id="commandX" value="~" /></label><label>坐标 Y<input id="commandY" value="~" /></label><label>坐标 Z<input id="commandZ" value="~" /></label>
+              <label>第二坐标 / 半径<input id="commandSecond" value="~5 ~5 ~5" /></label>
+            </div>
+            <div class="action-row"><button class="button primary" id="generateCommand">生成指令</button><button class="button ghost" id="copyCommand">复制</button><button class="button ghost" id="addCommandToProject">保存为函数</button></div>
+          </div>
+          <div class="code-card"><div class="code-head"><span>输出</span><button id="commandExplain">解释这条指令</button></div><pre id="commandOutput"></pre><div class="explanation" id="commandExplanation">点击“解释这条指令”，网站会把每一部分拆开说明。</div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-recipe" data-title="配方生成器">
+        <div class="page-head"><div><span class="kicker">Data Pack</span><h1>配方生成器</h1><p>支持工作台、无序、熔炉、高炉、烟熏炉、篝火与切石机配方。</p></div><button class="button primary" id="recipeAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>配方 ID<input id="recipeId" value="compressed_diamond" data-clean="id" /></label>
+              <label>类型<select id="recipeType"><option value="shaped">有序工作台</option><option value="shapeless">无序工作台</option><option value="smelting">熔炉</option><option value="blasting">高炉</option><option value="smoking">烟熏炉</option><option value="campfire_cooking">篝火</option><option value="stonecutting">切石机</option></select></label>
+              <label>产物 ID<input id="recipeResult" value="minecraft:diamond_block" list="minecraftItems" /></label>
+              <label>产物数量<input id="recipeCount" type="number" min="1" max="64" value="1" /></label>
+              <label>分组（可空）<input id="recipeGroup" value="gameforge" /></label>
+              <label>经验值<input id="recipeExperience" type="number" min="0" step="0.1" value="1" /></label>
+              <label>烧制时间（tick）<input id="recipeCookingTime" type="number" min="1" value="200" /></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">JSON 预览</span><pre class="mini-code" id="recipePreview"></pre></aside>
+          <div class="form-card full-span">
+            <div class="card-title"><span>材料</span><div><h2>3×3 配方网格</h2><p>熔炉或切石机类型只读取左上第一个非空材料。</p></div></div>
+            <div class="recipe-builder"><div class="craft-grid" id="recipeCraftGrid">
+              <input value="minecraft:diamond"><input value="minecraft:diamond"><input value="minecraft:diamond">
+              <input value="minecraft:diamond"><input value="minecraft:diamond"><input value="minecraft:diamond">
+              <input value="minecraft:diamond"><input value="minecraft:diamond"><input value="minecraft:diamond">
+            </div><div class="craft-arrow">→</div><div class="craft-result text-result"><span>◆</span><strong id="recipeResultPreview">minecraft:diamond_block ×1</strong></div></div>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>文件位置：</strong><span id="recipePathPreview">data/gameforge/recipes/compressed_diamond.json</span></div><button class="button primary large" id="recipeAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-loot" data-title="掉落表生成器">
+        <div class="page-head"><div><span class="kicker">Data Pack</span><h1>掉落表生成器</h1><p>一张表中可以放多个独立概率条目，适用于实体、方块、宝箱和通用奖励。</p></div><button class="button primary" id="lootAddTop">加入项目</button></div>
+        <div class="split-editor">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>掉落表 ID<input id="lootId" value="diamond_cow" data-clean="id" /></label>
+              <label>类型<select id="lootType"><option value="entity">实体</option><option value="block">方块</option><option value="chest">宝箱</option><option value="generic">通用</option></select></label>
+            </div>
+            <label>条目（每行：物品ID, 概率%, 最少, 最多）<textarea id="lootEntries" rows="9">minecraft:diamond,10,1,2
+minecraft:emerald,25,1,3
+minecraft:leather,100,1,2</textarea></label>
+            <div class="switch-grid">
+              <label class="switch"><input id="lootKilledByPlayer" type="checkbox"><span></span><b>必须由玩家击杀</b></label>
+              <label class="switch"><input id="lootSurvivesExplosion" type="checkbox"><span></span><b>方块需在爆炸中幸存</b></label>
+            </div>
+            <div class="action-row"><button class="button ghost" id="lootValidateLines">检查条目</button><button class="button primary" id="lootAdd">生成并加入项目</button></div>
+          </div>
+          <div class="code-card"><div class="code-head"><span>JSON 预览</span><small id="lootEntryCount">3 个条目</small></div><pre id="lootPreview"></pre></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-function" data-title="函数生成器">
+        <div class="page-head"><div><span class="kicker">Data Pack</span><h1>函数生成器</h1><p>把多条指令保存为一个 <code>.mcfunction</code>，可以手动调用、加载时执行、每 tick 执行或定时循环。</p></div><button class="button primary" id="functionAddTop">加入项目</button></div>
+        <div class="split-editor">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>函数 ID<input id="functionId" value="welcome" data-clean="path" /></label>
+              <label>触发方式<select id="functionTrigger"><option value="manual">手动 /function</option><option value="load">数据包加载时</option><option value="tick">每 tick</option><option value="interval">定时循环</option></select></label>
+              <label>循环间隔（tick）<input id="functionInterval" type="number" min="1" value="100" /></label>
+            </div>
+            <label>指令（每行一条，可写注释）<textarea id="functionCommands" rows="14"># 欢迎玩家
+title @a title {"text":"GameForge 已加载","color":"green"}
+tellraw @a {"text":"输入 /function gameforge:welcome 再次运行","color":"gray"}</textarea></label>
+            <div class="action-row"><button class="button ghost" id="functionClean">清理开头的 /</button><button class="button primary" id="functionAdd">生成并加入项目</button></div>
+          </div>
+          <div class="code-card"><div class="code-head"><span>函数预览</span><small id="functionLineCount">3 行</small></div><pre id="functionPreview"></pre></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-advancement" data-title="进度生成器">
+        <div class="page-head"><div><span class="kicker">Data Pack</span><h1>自定义进度</h1><p>制作带图标、标题、说明、触发条件和奖励函数的进度。</p></div><button class="button primary" id="advancementAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>进度 ID<input id="advancementId" value="obtain_star_crystal" data-clean="path" /></label>
+              <label>父进度（可空）<input id="advancementParent" value="minecraft:story/root" /></label>
+              <label>标题<input id="advancementTitle" value="触碰星光" /></label>
+              <label>图标物品<input id="advancementIcon" value="minecraft:amethyst_shard" list="minecraftItems" /></label>
+              <label class="full">说明<input id="advancementDescription" value="获得一枚星辉水晶" /></label>
+              <label>框架<select id="advancementFrame"><option value="task">普通</option><option value="goal">目标</option><option value="challenge">挑战</option></select></label>
+              <label>触发条件<select id="advancementTrigger"><option value="inventory_changed">获得物品</option><option value="consume_item">食用物品</option><option value="player_killed_entity">击杀实体</option><option value="tick">进入世界后立即</option><option value="recipe_crafted">完成配方</option></select></label>
+              <label>目标 ID<input id="advancementTarget" value="minecraft:amethyst_shard" /></label>
+              <label>奖励函数（可空）<input id="advancementReward" value="" placeholder="例如 welcome" /></label>
+            </div>
+            <div class="switch-grid">
+              <label class="switch"><input id="advancementToast" type="checkbox" checked><span></span><b>弹出提示</b></label>
+              <label class="switch"><input id="advancementAnnounce" type="checkbox" checked><span></span><b>聊天公告</b></label>
+              <label class="switch"><input id="advancementHidden" type="checkbox"><span></span><b>隐藏进度</b></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">游戏内样式</span><div class="advancement-toast"><div class="adv-icon" id="advancementPreviewIcon">◆</div><div><small>进度已达成！</small><strong id="advancementPreviewTitle">触碰星光</strong><span id="advancementPreviewDescription">获得一枚星辉水晶</span></div></div><pre class="mini-code" id="advancementPreview"></pre></aside>
+        </div>
+        <div class="bottom-action-bar"><div><strong>提示：</strong><span>奖励函数必须先存在；留空时只显示进度。</span></div><button class="button primary large" id="advancementAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-resource" data-title="资源包物品">
+        <div class="page-head"><div><span class="kicker">Resource Pack</span><h1>资源包物品</h1><p>单独为原版物品创建 CustomModelData 模型与纹理，可与指令或现有数据包配合。</p></div><button class="button primary" id="resourceAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="form-grid two">
+              <label>内部 ID<input id="resourceId" value="moon_dagger" data-clean="id" /></label>
+              <label>显示名称<input id="resourceName" value="月影匕首" /></label>
+              <label>基础物品<input id="resourceBase" value="minecraft:iron_sword" list="minecraftItems" /></label>
+              <label>模型编号<input id="resourceModelData" type="number" min="1" value="1301" /></label>
+              <label>模型类型<select id="resourceStyle"><option value="handheld">手持</option><option value="generated">平面</option><option value="cube">立方体</option></select></label>
+              <label>主题颜色<input id="resourceColor" type="color" value="#8da6ff" /></label>
+              <label class="full">纹理 PNG<input id="resourceTexture" type="file" accept="image/png" /></label>
+            </div>
+            <div class="switch-grid"><label class="switch"><input id="resourceGiveFunction" type="checkbox" checked><span></span><b>同时生成给予函数</b></label><label class="switch"><input id="resourceGlow" type="checkbox" checked><span></span><b>给予物品带光效</b></label></div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">纹理与模型</span><canvas class="large-canvas" id="resourceTextureCanvas" width="224" height="224"></canvas><button class="button ghost full-button" id="resourceGenerateTexture">生成像素纹理</button><div class="preview-code"><small>CustomModelData</small><code id="resourceCmdPreview">/give @p minecraft:iron_sword{CustomModelData:1301}</code></div></aside>
+        </div>
+        <div class="bottom-action-bar"><div><strong>兼容性：</strong><span>会合并同一基础物品的多个 overrides，避免后加入的模型覆盖前一个。</span></div><button class="button primary large" id="resourceAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-forge" data-title="Forge Mod 源码生成器">
+        <div class="page-head"><div><span class="kicker">Forge 1.20.1 · Java 17</span><h1>真正的 Mod 源码生成器</h1><p>生成可导入 IDE 的 Forge 项目源码。包含注册代码、资源文件、配方与 Windows 自动获取 MDK 脚本。</p></div><button class="button primary" id="forgeAddTop">加入项目</button></div>
+        <div class="editor-layout compact">
+          <div class="form-card">
+            <div class="card-title"><span>01</span><div><h2>Mod 信息</h2></div></div>
+            <div class="form-grid two">
+              <label>Mod ID<input id="forgeModId" value="rubygear" data-clean="id" /></label>
+              <label>Mod 名称<input id="forgeModName" value="Ruby Gear" /></label>
+              <label>Java 包名<input id="forgePackage" value="com.gameforge.rubygear" /></label>
+              <label>作者<input id="forgeAuthor" value="GameForge Creator" /></label>
+              <label>版本<input id="forgeVersion" value="1.0.0" /></label>
+              <label>许可证<select id="forgeLicense"><option value="MIT">MIT</option><option value="All Rights Reserved">All Rights Reserved</option><option value="Apache-2.0">Apache-2.0</option><option value="GPL-3.0">GPL-3.0</option></select></label>
+              <label class="full">简介<input id="forgeDescription" value="A mod generated with GameForge Lite." /></label>
+            </div>
+          </div>
+          <aside class="preview-card sticky-preview"><span class="card-label">项目状态</span><div class="forge-logo">⬡</div><h3 id="forgePreviewName">Ruby Gear</h3><div class="tag-row"><span>MC 1.20.1</span><span>Forge 47.4.10</span><span>Java 17</span></div><div class="preview-code"><small>构建命令</small><code>build-mod.bat</code></div><p class="muted-small">首次运行脚本会从 Forge 官方地址获取 MDK 的 Gradle Wrapper。</p></aside>
+          <div class="form-card full-span">
+            <div class="card-title"><span>02</span><div><h2>要注册的内容</h2></div></div>
+            <div class="form-grid three">
+              <label>内容类型<select id="forgeContentType"><option value="tool">剑 / 工具</option><option value="item">普通物品</option><option value="food">食物</option><option value="block">方块</option></select></label>
+              <label>注册 ID<input id="forgeRegistryId" value="ruby_sword" data-clean="id" /></label>
+              <label>显示名称<input id="forgeDisplayName" value="Ruby Sword" /></label>
+              <label>攻击伤害 / 营养<input id="forgePrimaryStat" type="number" value="10" /></label>
+              <label>攻击速度 / 饱和度<input id="forgeSecondaryStat" type="number" step="0.1" value="-2.4" /></label>
+              <label>耐久 / 堆叠数量<input id="forgeDurability" type="number" value="1800" /></label>
+              <label>硬度（方块）<input id="forgeHardness" type="number" step="0.1" value="3" /></label>
+              <label>抗爆（方块）<input id="forgeResistance" type="number" step="0.1" value="6" /></label>
+              <label>主题颜色<input id="forgeColor" type="color" value="#e5395d" /></label>
+              <label class="full">纹理 PNG<input id="forgeTexture" type="file" accept="image/png" /></label>
+            </div>
+            <div class="switch-grid"><label class="switch"><input id="forgeRecipeEnabled" type="checkbox" checked><span></span><b>生成示例配方</b></label><label class="switch"><input id="forgeCreativeTab" type="checkbox" checked><span></span><b>加入创造模式标签页</b></label></div>
+          </div>
+        </div>
+        <div class="bottom-action-bar"><div><strong>输出：</strong><span>完整源码、build.gradle、mods.toml、模型、纹理、语言、配方、setup-windows.ps1 与构建脚本。</span></div><button class="button primary large" id="forgeAdd">生成并加入项目</button></div>
+      </section>
+
+      <section class="page" id="page-workspace" data-title="项目工作区">
+        <div class="page-head"><div><span class="kicker">Project Workspace</span><h1>项目工作区</h1><p>查看组件、生成文件、诊断结果，并下载独立数据包、资源包、Forge 源码或完整套装。</p></div><button class="button primary" id="downloadBundleWorkspace">下载完整套装</button></div>
+        <div class="workspace-stats">
+          <div><span>组件</span><strong id="workspaceComponentStat">0</strong></div><div><span>数据包文件</span><strong id="workspaceDatapackStat">0</strong></div><div><span>资源包文件</span><strong id="workspaceResourceStat">0</strong></div><div><span>Forge 文件</span><strong id="workspaceForgeStat">0</strong></div><div><span>诊断</span><strong id="workspaceIssueStat">0</strong></div>
+        </div>
+        <div class="download-grid">
+          <button class="download-card" id="downloadDatapack"><span class="download-icon green">DP</span><div><strong>数据包 ZIP</strong><small>直接放入世界的 datapacks</small></div><b>↓</b></button>
+          <button class="download-card" id="downloadResourcepack"><span class="download-icon blue">RP</span><div><strong>资源包 ZIP</strong><small>直接放入 resourcepacks</small></div><b>↓</b></button>
+          <button class="download-card" id="downloadForge"><span class="download-icon violet">FM</span><div><strong>Forge 源码 ZIP</strong><small>导入 IDE、测试并构建 JAR</small></div><b>↓</b></button>
+          <button class="download-card" id="downloadProjectSource"><span class="download-icon orange">ALL</span><div><strong>完整项目源文件</strong><small>包含所有分组和 manifest</small></div><b>↓</b></button>
+        </div>
+
+        <div class="workspace-grid">
+          <section class="panel component-panel">
+            <div class="panel-head"><div><strong>项目组件</strong><small id="componentPanelSubtitle">还没有组件</small></div><button class="text-button" id="clearComponents">清空</button></div>
+            <div class="component-list" id="componentList"></div>
+          </section>
+          <section class="panel file-panel">
+            <div class="panel-head"><div><strong>生成文件</strong><small id="filePanelSubtitle">0 个文件</small></div><input class="file-search" id="fileSearch" placeholder="搜索路径…" /></div>
+            <div class="file-browser">
+              <div class="file-tree" id="fileTree"></div>
+              <div class="file-preview">
+                <div class="file-preview-head"><span id="selectedFilePath">选择一个文件查看</span><div><button id="copySelectedFile">复制</button><button id="downloadSelectedFile">下载</button></div></div>
+                <pre id="selectedFileContent">项目生成后，文件会显示在这里。</pre>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="page-projects" data-title="本地项目">
+        <div class="page-head"><div><span class="kicker">Local Projects</span><h1>本地项目</h1><p>项目存储在浏览器 localStorage，不需要账号。可以导出 JSON 备份，再在另一台电脑导入。</p></div><div class="head-actions"><button class="button ghost" id="importProjectButton">导入 JSON</button><button class="button primary" id="createProjectButton">新建项目</button><input id="importProjectInput" type="file" accept="application/json" hidden></div></div>
+        <div class="project-editor-card">
+          <div class="form-grid three">
+            <label>项目名称<input id="projectNameInput" value="我的第一个作品" /></label>
+            <label>命名空间<input id="projectNamespaceInput" value="gameforge" data-clean="id" /></label>
+            <label>Minecraft 版本<select id="projectVersionInput"><option value="1.20.1">Java 1.20.1</option></select></label>
+            <label class="full">项目说明<input id="projectDescriptionInput" value="使用 GameForge Lite 创建的 Minecraft 作品" /></label>
+          </div>
+          <div class="action-row"><button class="button primary" id="saveProjectSettings">保存项目信息</button><button class="button ghost" id="exportCurrentProject">导出当前项目 JSON</button><button class="button danger-ghost" id="deleteCurrentProject">删除当前项目</button></div>
+        </div>
+        <div class="section-heading small"><div><h2>我的项目</h2></div><p id="projectStorageInfo">0 个项目</p></div>
+        <div class="project-grid" id="projectGrid"></div>
+      </section>
+
+      <section class="page" id="page-diagnostics" data-title="测试与修复">
+        <div class="page-head"><div><span class="kicker">Quality Lab</span><h1>测试与修复</h1><p>自动检查项目结构、JSON、ID、文件冲突与常见 Minecraft / Forge 报错。</p></div><button class="button primary" id="runDiagnostics">重新检查</button></div>
+        <div class="diagnostic-summary" id="diagnosticSummary"><div class="diag-ring"><strong id="diagnosticScore">100</strong><span>质量分</span></div><div><h2 id="diagnosticHeadline">项目准备就绪</h2><p id="diagnosticDescription">还没有发现阻止下载的问题。</p></div></div>
+        <div class="diagnostic-grid">
+          <section class="panel"><div class="panel-head"><div><strong>项目诊断</strong><small>每次组件变化后自动运行</small></div></div><div class="diagnostic-list" id="diagnosticList"></div></section>
+          <section class="panel"><div class="panel-head"><div><strong>浏览器自测</strong><small>直接调用生成器测试核心路径</small></div><button class="text-button" id="runSelfTests">运行全部</button></div><div class="test-list" id="selfTestList"><div class="empty-state compact"><span>✓</span><p>点击“运行全部”测试解析器、JSON、命名空间、纹理、ZIP 与 Forge 项目生成。</p></div></div></section>
+        </div>
+        <section class="panel log-panel">
+          <div class="panel-head"><div><strong>报错分析器</strong><small>粘贴 latest.log、crash-report 或游戏聊天中的红字</small></div><button class="text-button" id="analyzeLog">分析报错</button></div>
+          <textarea id="logInput" rows="10" placeholder="把报错内容粘贴到这里。内容只在你的浏览器里分析，不会上传。"></textarea>
+          <div class="log-results" id="logResults"><div class="empty-state compact"><span>⌕</span><p>等待报错内容。</p></div></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-learn" data-title="学习与安装">
+        <div class="page-head"><div><span class="kicker">Guide</span><h1>学习与安装</h1><p>你不需要先学会全部原理，但这里会告诉你生成的文件在做什么，以及出错时先看哪里。</p></div></div>
+        <div class="guide-tabs" role="tablist">
+          <button class="active" data-guide="install">安装作品</button><button data-guide="datapack">数据包结构</button><button data-guide="resourcepack">资源包结构</button><button data-guide="forge">Forge 构建</button><button data-guide="safety">安全测试</button>
+        </div>
+        <div class="guide-content active" id="guide-install">
+          <div class="guide-grid"><article><span>1</span><h3>数据包</h3><p>把下载的 ZIP 放入 <code>.minecraft/saves/世界名/datapacks</code>，进入世界后执行 <code>/reload</code>。</p></article><article><span>2</span><h3>资源包</h3><p>把资源包 ZIP 放入 <code>.minecraft/resourcepacks</code>，在游戏设置中启用，并放在其他冲突资源包上方。</p></article><article><span>3</span><h3>获得作品</h3><p>工作区的安装说明会列出给予或召唤函数，例如 <code>/function 命名空间:weapon/id/give</code>。</p></article><article><span>4</span><h3>多人世界</h3><p>数据包装在服务器世界里；资源包需要每名玩家启用，或由服务器设置资源包下载地址。</p></article></div>
+        </div>
+        <div class="guide-content" id="guide-datapack"><div class="diagram"><code>pack.mcmeta</code><span>描述版本</span><code>data/minecraft/tags/functions/</code><span>注册 load 与 tick</span><code>data/你的命名空间/functions/</code><span>存放指令函数</span><code>data/你的命名空间/recipes/</code><span>存放配方 JSON</span><code>data/你的命名空间/loot_tables/</code><span>存放掉落表</span></div><div class="notice-box"><strong>为什么使用模板生成？</strong><p>模板能保证目录与 JSON 结构稳定；智能解析只负责把你的描述转换成字段，不直接随意编造整套代码。</p></div></div>
+        <div class="guide-content" id="guide-resourcepack"><div class="diagram"><code>pack.mcmeta</code><span>资源包版本</span><code>assets/minecraft/models/item/基础物品.json</code><span>根据 CustomModelData 切换模型</span><code>assets/命名空间/models/item/id.json</code><span>自定义模型</span><code>assets/命名空间/textures/item/id.png</code><span>自定义纹理</span></div><div class="notice-box warning"><strong>资源包冲突</strong><p>两个资源包都修改同一个基础物品模型时，排序靠上的会覆盖下面的。GameForge 会在同一个项目里自动合并 overrides，但无法自动合并其他作者的资源包。</p></div></div>
+        <div class="guide-content" id="guide-forge"><div class="step-list"><div><b>1</b><p>安装 64 位 JDK 17，并确认 PowerShell 中 <code>java -version</code> 显示 17。</p></div><div><b>2</b><p>解压 Forge 源码 ZIP，右键运行 <code>setup-windows.ps1</code>，它会下载推荐 MDK 的 Gradle Wrapper。</p></div><div><b>3</b><p>运行 <code>run-client.bat</code> 启动开发客户端测试。</p></div><div><b>4</b><p>运行 <code>build-mod.bat</code>，JAR 会出现在 <code>build/libs</code>。</p></div></div><div class="notice-box"><strong>IDE 可选</strong><p>想看懂或继续修改代码，可以用 IntelliJ IDEA 或 VS Code；只体验生成结果时，可以先直接运行脚本。</p></div></div>
+        <div class="guide-content" id="guide-safety"><div class="guide-grid"><article><span>✓</span><h3>复制测试世界</h3><p>第一次运行爆炸、传送、循环函数前，在单独世界测试，不要直接使用重要存档。</p></article><article><span>✓</span><h3>看红字</h3><p>执行 <code>/reload</code> 后查看聊天与 <code>latest.log</code>；把报错贴到“测试与修复”。</p></article><article><span>✓</span><h3>避免高频命令</h3><p>tick 函数每秒运行 20 次。大范围选择器、反复 summon 与 fill 可能造成卡顿。</p></article><article><span>✓</span><h3>逐个启用</h3><p>组合项目出错时，先只保留一个组件，确认后再逐个恢复，最快定位冲突。</p></article></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <datalist id="minecraftItems">
+    <option value="minecraft:diamond_sword"><option value="minecraft:netherite_sword"><option value="minecraft:iron_sword"><option value="minecraft:carrot_on_a_stick"><option value="minecraft:warped_fungus_on_a_stick"><option value="minecraft:amethyst_shard"><option value="minecraft:nether_star"><option value="minecraft:diamond"><option value="minecraft:emerald"><option value="minecraft:paper"><option value="minecraft:stick"><option value="minecraft:blaze_rod"><option value="minecraft:apple"><option value="minecraft:golden_apple"><option value="minecraft:stone"><option value="minecraft:diamond_block"><option value="minecraft:knowledge_book">
+  </datalist>
+  <datalist id="minecraftEntities">
+    <option value="minecraft:zombie"><option value="minecraft:skeleton"><option value="minecraft:husk"><option value="minecraft:drowned"><option value="minecraft:piglin_brute"><option value="minecraft:warden"><option value="minecraft:spider"><option value="minecraft:ravager"><option value="minecraft:wither_skeleton"><option value="minecraft:iron_golem"><option value="minecraft:cow"><option value="minecraft:wolf">
+  </datalist>
+
+  <script src="js/core.js"></script>
+  <script src="js/generators.js"></script>
+      <script src="local-vocabulary.js"></script>
+  <script src="vocabulary-data.js"></script>
+  <script src="vocabulary-pack.js"></script>
+  <script src="core-mechanisms.js"></script>
+  <script src="js/app.js"></script>
+  <script src="jar-entry.js" defer></script>
+</body>
+</html>

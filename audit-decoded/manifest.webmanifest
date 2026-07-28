@@ -1,0 +1,12 @@
+{
+  "name": "GameForge Studio",
+  "short_name": "GameForge",
+  "description": "在浏览器中生成 Minecraft Java 1.20.1 数据包、资源包和 Forge Mod 源码。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080c0a",
+  "theme_color": "#0a0f0c",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
