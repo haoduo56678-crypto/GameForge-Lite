@@ -30,12 +30,17 @@ const machine = GF.nativeSystems.createMachineComponent({
   processTicks: 80, color: '#668cff', autoStart: false,
   recipeGrid: ['minecraft:iron_ingot','minecraft:redstone','minecraft:iron_ingot','minecraft:stone','minecraft:furnace','minecraft:stone','minecraft:iron_ingot','minecraft:redstone','minecraft:iron_ingot']
 });
+const noFuelMachine = GF.nativeSystems.createMachineComponent({
+  name: '免燃料压缩机', id: 'fuel_free_press', inputItem: 'minecraft:coal', inputCount: 9,
+  fuelItem: 'minecraft:air', fuelCount: 0, outputItem: 'minecraft:coal_block', outputCount: 1,
+  processTicks: 40, color: '#4f5969', autoStart: true
+});
 const entity = GF.nativeSystems.createEntityComponent({
   name: '亡灵守卫', id: 'undead_guard', health: 40, damage: 7, speed: 0.28, armor: 3,
   goals: ['float','melee_attack','random_stroll','look_at_player','random_look','hurt_by_target','nearest_player'],
   targetPlayers: true, texture: 'minecraft:textures/entity/zombie/zombie.png'
 });
-if (!GF.nativeSystems.isMachine(machine) || !GF.nativeSystems.isCustomEntity(entity)) throw new Error('Legacy machine/entity component detection failed.');
+if (!GF.nativeSystems.isMachine(machine) || !GF.nativeSystems.isMachine(noFuelMachine) || !GF.nativeSystems.isCustomEntity(entity)) throw new Error('Legacy machine/entity component detection failed.');
 
 const machineGraph = GF.blueprint.graphFromComponent(machine);
 const entityGraph = GF.blueprint.graphFromComponent(entity);
@@ -63,7 +68,7 @@ if (parsedEntity.spec.health !== 60 || parsedEntity.spec.damage !== 9 || !parsed
 
 const weaponProject = GF.project.create({ name: 'Native Systems Fixture', namespace: 'native_systems_fixture' });
 const weapon = GF.generators.parsePrompt('做一把叫守卫之刃的剑，命中亡灵时造成三倍伤害', weaponProject).components[0];
-const project = GF.project.create({ name: 'Native Systems Fixture', namespace: 'native_systems_fixture', components: [weapon, appliedMachine.component, appliedEntity.component] });
+const project = GF.project.create({ name: 'Native Systems Fixture', namespace: 'native_systems_fixture', components: [weapon, appliedMachine.component, noFuelMachine, appliedEntity.component] });
 const ir = GF.pipeline.fromLegacyProject(project);
 const validation = GF.pipeline.validate(ir);
 if (validation.some((issue) => issue.severity === 'error')) throw new Error(`Native system IR validation failed: ${JSON.stringify(validation)}`);
@@ -74,6 +79,17 @@ const output = GF.nativeForge.generateFromIR(ir, {
 if (!output.report.nativeSystems?.capabilities?.customGui || !output.report.nativeSystems.capabilities.simpleChannel
   || !output.report.nativeSystems.capabilities.blockEntity || !output.report.nativeSystems.capabilities.customEntityType
   || !output.report.nativeSystems.capabilities.basicGoalAi) throw new Error('Native systems capability report is incomplete.');
+if (output.report.nativeSystems.machines.length !== 2 || output.report.nativeSystems.entities.length !== 1) throw new Error('Native systems report counts are incorrect.');
+
+const systemOnlyProject = GF.project.create({ name: 'Systems Only', namespace: 'systems_only', components: [machine, entity] });
+const systemOnlyOutput = GF.nativeForge.generate(systemOnlyProject, {
+  modId: 'systems_only', modName: 'Systems Only', packageName: 'com.gameforge.systemsonly', version: '1.0.0', author: 'GameForge CI'
+});
+if (!systemOnlyOutput.files.some((entry) => entry.name.endsWith('/SystemEntities.java'))
+  || !systemOnlyOutput.files.some((entry) => entry.name.endsWith('/GameForgeMachineBlockEntity.java'))
+  || !systemOnlyOutput.files.some((entry) => entry.name.endsWith('/SystemsOnlyMod.java'))) {
+  throw new Error('A project containing only native systems did not generate a complete Forge source project.');
+}
 
 const byName = new Map(output.files.map((entry) => [entry.name, entry]));
 if (byName.size !== output.files.length) throw new Error('Native system generator emitted duplicate file paths.');
@@ -97,19 +113,35 @@ function textEnding(suffix) {
   return String(entry.data || '');
 }
 const blockEntity = textEnding('GameForgeMachineBlockEntity.java');
-for (const marker of ['ItemStackHandler(3)','saveAdditional','deserializeNBT','ForgeCapabilities.ITEM_HANDLER','serverTick','handleAction']) if (!blockEntity.includes(marker)) throw new Error(`BlockEntity source missing marker: ${marker}`);
+for (const marker of [
+  'ItemStackHandler(3)','saveAdditional','deserializeNBT','ForgeCapabilities.ITEM_HANDLER','serverTick','handleAction',
+  'definition().needsFuel() && matches(stack, definition().fuelItem())',
+  'boolean processing = machine.active && machine.canProcess()',
+  'dirty && level.getGameTime() % 5L == 0L',
+  'ResourceLocation.tryParse(id)'
+]) if (!blockEntity.includes(marker)) throw new Error(`BlockEntity source missing marker: ${marker}`);
+for (const forbidden of [
+  'return !definition().needsFuel() || matches(stack, definition().fuelItem())',
+  'if (changed || level.getGameTime() % 20L == 0L) machine.sync()'
+]) if (blockEntity.includes(forbidden)) throw new Error(`BlockEntity source still contains unsafe/expensive logic: ${forbidden}`);
 const menu = textEnding('GameForgeMachineMenu.java');
 for (const marker of ['AbstractContainerMenu','SlotItemHandler','addDataSlots','quickMoveStack']) if (!menu.includes(marker)) throw new Error(`Menu source missing marker: ${marker}`);
+if (!(menu.indexOf('machine.isInput(stack)') < menu.indexOf('machine.isFuel(stack)'))) throw new Error('Shift-click should prefer a valid input slot before a fuel slot.');
 const screen = textEnding('GameForgeMachineScreen.java');
 for (const marker of ['AbstractContainerScreen','Button.builder','MachineNetwork.sendAction','scaledProgress']) if (!screen.includes(marker)) throw new Error(`Screen source missing marker: ${marker}`);
 const network = textEnding('MachineNetwork.java');
-for (const marker of ['SimpleChannel','PLAY_TO_SERVER','PLAY_TO_CLIENT','PacketDistributor.PLAYER']) if (!network.includes(marker)) throw new Error(`Network source missing marker: ${marker}`);
+for (const marker of ['SimpleChannel','PLAY_TO_SERVER','PLAY_TO_CLIENT','PacketDistributor.PLAYER','ResourceLocation.tryParse']) if (!network.includes(marker)) throw new Error(`Network source missing marker: ${marker}`);
+if (network.includes('new ResourceLocation(')) throw new Error('MachineNetwork still uses a deprecated ResourceLocation constructor.');
 const actionPacket = textEnding('MachineActionPacket.java');
 for (const marker of ['sender.containerMenu instanceof GameForgeMachineMenu','distanceToSqr','menu.position().equals','packet.action < 0']) if (!actionPacket.includes(marker)) throw new Error(`C2S packet validation missing marker: ${marker}`);
 const entitySource = textEnding('GameForgeCustomMob.java');
-for (const marker of ['extends Monster','registerGoals','MeleeAttackGoal','HurtByTargetGoal','NearestAttackableTargetGoal','createAttributes']) if (!entitySource.includes(marker)) throw new Error(`Entity/Goal AI source missing marker: ${marker}`);
+for (const marker of ['extends Monster','registerGoals','MeleeAttackGoal','HurtByTargetGoal','NearestAttackableTargetGoal','createAttributes','if (definition.boss())','setPersistenceRequired()']) if (!entitySource.includes(marker)) throw new Error(`Entity/Goal AI source missing marker: ${marker}`);
+if (entitySource.includes('setCustomNameVisible(definition.boss())')) throw new Error('Normal generated mobs are still permanently named and would not despawn naturally.');
 const entitiesRegistry = textEnding('SystemEntities.java');
 for (const marker of ['DeferredRegister<EntityType<?>>','EntityType.Builder.of','undead_guard']) if (!entitiesRegistry.includes(marker)) throw new Error(`EntityType registry missing marker: ${marker}`);
+if (entitiesRegistry.includes('new ResourceLocation(')) throw new Error('EntityType registry still uses a deprecated ResourceLocation constructor.');
+const renderer = textEnding('GameForgeCustomMobRenderer.java');
+if (!renderer.includes('ResourceLocation.tryParse')) throw new Error('Entity renderer does not safely parse configured texture IDs.');
 
 const mainPage = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 const blueprintPage = fs.readFileSync(path.join(DIST, 'blueprint.html'), 'utf8');
