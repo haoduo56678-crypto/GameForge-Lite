@@ -93,5 +93,6 @@
   "message.gameforge_runtime.missing_function": "作品缺少运行函数：%s",
   "message.gameforge_runtime.missing_component_function": "没有找到可执行的内容函数：%s",
   "message.gameforge_runtime.executed": "已执行：%s",
-  "message.gameforge_runtime.component_executed": "已%s：%s"
+  "message.gameforge_runtime.component_executed": "已%s：%s",
+  "message.gameforge_runtime.weapon_triggered": "%s：%s（目标：%s）"
 }
