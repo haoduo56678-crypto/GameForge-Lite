@@ -49,7 +49,18 @@ jobs:
           gradle-version: '8.8'
 
       - name: Build website and run architecture regressions
-        run: npm run build
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee architecture-site-build.log
+
+      - name: Upload website architecture build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-architecture-site-build-log
+          path: architecture-site-build.log
+          if-no-files-found: warn
 
       - name: Export native Forge fixture
         run: node scripts/export-native-forge-fixture.js
