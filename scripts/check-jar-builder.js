@@ -31,6 +31,7 @@ const page = requireFile(pagePath);
 const entry = requireFile(entryPath);
 const fileName = requireFile(fileNamePath);
 
+execFileSync(process.execPath, ['--check', builderPath], { stdio: 'inherit' });
 execFileSync(process.execPath, ['--check', fileNamePath], { stdio: 'inherit' });
 
 requireMarkers(builder, 'dist/jar-builder.js', [
@@ -38,7 +39,12 @@ requireMarkers(builder, 'dist/jar-builder.js', [
   "addText('pack.mcmeta'",
   'function validateGeneratedJar',
   'modLoader="lowcodefml"',
-  '重新打开并验证 JAR'
+  '重新打开并验证 JAR',
+  'runtimeRequiredComponents',
+  'modId="gameforge_runtime"',
+  'versionRange="[1.20.1-0.3.0,)"',
+  '高级命中技能缺少 GameForge Runtime 0.3.0 依赖声明',
+  '普通作品不应被错误标记为必须安装 GameForge Runtime'
 ]);
 
 requireMarkers(page, 'dist/jar.html', [
@@ -65,4 +71,4 @@ requireMarkers(entry, 'dist/jar-entry.js', [
   'interceptProjectDownload'
 ]);
 
-console.log('ZIP → JAR naming, validation, and Runtime download notice checks passed.');
+console.log('ZIP → JAR naming, conditional Runtime dependency, validation, and download notice checks passed.');
