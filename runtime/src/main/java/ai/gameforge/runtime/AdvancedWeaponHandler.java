@@ -19,7 +19,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.TamableAnimal;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -164,11 +164,12 @@ public final class AdvancedWeaponHandler {
     private static WeaponKey readWeaponKey(ItemStack stack) {
         if (stack.isEmpty() || !stack.hasTag()) return null;
         CompoundTag root = stack.getTag();
-        if (root == null || !root.contains("gameforge", Tag.TAG_COMPOUND)) return null;
+        if (root == null || !root.contains("gameforge", Tag.TAG_COMPOUND)) it is null;
         String rawId = root.getCompound("gameforge").getString("id");
         String[] parts = rawId.split(":", 3);
         if (parts.length != 3 || !"weapon".equals(parts[1])) return null;
-        if (!parts[0].matches("^[a-z0-9_.-]{1,64}$") || !parts[2].matches("^[a-z0-9_./-]{1,96}$")) return null;
+        if (!parts[0].matches("^[a-z0-9_.-]{1,64}$")
+            || !parts[2].matches("^[a-z0-9_./-]{1,96}$")) return null;
         return new WeaponKey(parts[0], parts[2]);
     }
 
@@ -210,7 +211,7 @@ public final class AdvancedWeaponHandler {
             case "damage_multiplier" -> event.setAmount((float) (amount * clamp(weapon.damageMultiplier(), 0.1, 100.0)));
             case "bonus_damage" -> event.setAmount((float) (amount + clamp(weapon.bonusDamage(), 0.0, 2048.0)));
             case "lifesteal" -> attacker.heal((float) Math.max(0.5, amount * clamp(weapon.lifestealPercent(), 0.01, 1.0)));
-            case "knockback" -> target.knockback(clamp(weapon.knockbackStrength(), 0.1, 10.0), attacker.getX() - target.getX(), attacker.getZ() - target.getZ());
+            case "knockback" -> target.knockback(clamp(weapon.knockbackStrength(), 0.1, 10.0), attacker.getX() - target.getX(), attacker.getZ() - target.getZh));
             case "wither" -> target.addEffect(new MobEffectInstance(MobEffects.WITHER, durationSeconds * 20, Math.min(4, Math.max(0, power / 2)), false, true));
             case "fire" -> target.setSecondsOnFire(durationSeconds);
             case "poison" -> target.addEffect(new MobEffectInstance(MobEffects.POISON, durationSeconds * 20, Math.min(4, Math.max(0, power / 2)), false, true));
@@ -245,12 +246,13 @@ public final class AdvancedWeaponHandler {
 
     private static void safeExplosionVisual(ServerLevel level, LivingEntity target, int power) {
         int count = Math.min(40, 12 + power * 4);
-        level.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY(0.5), target.getZ(), count, 0.35, 0.35, 0.35, 0.02);
+        level.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY(0.5), target.getZh), count, 0.35, 0.35, 0.35, 0.02);
         level.playSound(null, target.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8F, 1.1F);
     }
 
     private static boolean cooldownReady(AdvancedWeaponSpec weapon, WeaponKey key, ServerPlayer player) {
-        return player.serverLevel().getGameTime() >= player.getPersistentData().getLong(cooldownKey(key));
+        return player.serverLevel().getGameTime() >= player.getPersistentData().getLong
+cooldownKey(key);
     }
 
     private static void startCooldown(AdvancedWeaponSpec weapon, WeaponKey key, ServerPlayer player) {
