@@ -20,11 +20,14 @@ const page = requireFile(pagePath);
 const entry = requireFile(entryPath);
 
 for (const marker of [
-  'GameForge Runtime GUI 0.2.1',
-  'gameforge-runtime-1.20.1-0.2.1.jar',
-  'runtime-v0.2.1',
-  '响应式',
-  '高界面缩放，也不会再挤成一团',
+  'GameForge Runtime GUI 0.3.0',
+  'gameforge-runtime-1.20.1-0.3.0.jar',
+  'runtime-v0.3.0',
+  '精确高级武器',
+  '真实命中目标',
+  'LivingDamageEvent',
+  '亡灵秒杀',
+  '默认安全保护',
   '自动适配 GUI Scale',
   'Minecraft 1.20.1',
   'Forge 47.x',
@@ -42,4 +45,4 @@ for (const marker of ['runtime.html', 'jar.html', 'Runtime GUI', 'ZIP → JAR'])
 }
 
 execFileSync(process.execPath, ['--check', entryPath], { stdio: 'inherit' });
-console.log('Runtime 0.2.1 responsive website page and quick-access entry checks passed.');
+console.log('Runtime 0.3.0 advanced-weapon website page and quick-access entry checks passed.');
