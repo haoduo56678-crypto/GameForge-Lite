@@ -46,10 +46,7 @@ replaceOnce(
         if (machine.active && machine.canProcess()) {
             machine.progress++;
             changed = true;
-            if (machine.progress >= machine.definition().processTicks()) {
-                machine.completeOperation();
-                machine.progress = 0;
-            }
+            if (machine.progress >= machine.definition().processTicks()) { machine.completeOperation(); machine.progress = 0; }
         } else if (!machine.canProcess() && machine.progress != 0) {
             machine.progress = 0;
             changed = true;
@@ -89,9 +86,7 @@ replaceOnce(
   'machine tick synchronization loop'
 );
 replaceOnce(
-`    private Item resolve(String id) {
-        return BuiltInRegistries.ITEM.getOptional(new net.minecraft.resources.ResourceLocation(id)).orElse(Items.AIR);
-    }`,
+  '    private Item resolve(String id) { return BuiltInRegistries.ITEM.getOptional(new net.minecraft.resources.ResourceLocation(id)).orElse(Items.AIR); }',
 `    private Item resolve(String id) {
         net.minecraft.resources.ResourceLocation location = net.minecraft.resources.ResourceLocation.tryParse(id);
         return location == null ? Items.AIR : BuiltInRegistries.ITEM.getOptional(location).orElse(Items.AIR);
