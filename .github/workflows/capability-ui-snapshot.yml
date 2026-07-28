@@ -1,0 +1,43 @@
+name: Capability UI Snapshot
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/capability-ui-snapshot.yml'
+      - 'extras/capability-*.js'
+      - 'extras/capability-*.css'
+      - 'scripts/install-capability-status.js'
+      - 'scripts/check-capability-status.js'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build current site
+        run: npm run build
+      - name: Upload UI sources for integration checks
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameforge-capability-ui-snapshot
+          path: |
+            dist/index.html
+            dist/js/app.js
+            dist/js/core.js
+            dist/js/generators.js
+            dist/styles.css
+            dist/blueprint.html
+            dist/native-forge.html
+            dist/native-systems.html
+            dist/worldgen.html
+          if-no-files-found: error
