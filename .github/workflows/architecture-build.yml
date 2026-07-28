@@ -9,7 +9,7 @@ on:
       - 'extensions-v2/**'
       - 'extras/**'
       - 'scripts/**'
-      - 'docs/ARCHITECTURE.md'
+      - 'docs/**'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
   push:
@@ -20,10 +20,14 @@ on:
       - 'extensions-v2/**'
       - 'extras/**'
       - 'scripts/**'
-      - 'docs/ARCHITECTURE.md'
+      - 'docs/**'
       - 'package.json'
       - '.github/workflows/architecture-build.yml'
   workflow_dispatch:
+
+concurrency:
+  group: gameforge-native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -57,29 +61,6 @@ jobs:
         run: |
           set -o pipefail
           npm run build 2>&1 | tee architecture-site-build.log
-
-      - name: Upload extracted architecture sources
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gameforge-extracted-architecture-sources
-          path: |
-            extras/gameforge-ir.js
-            extras/gameforge-blueprint.js
-            extras/native-forge-generator.js
-            extras/blueprint-editor.js
-            extras/blueprint.html
-            extras/blueprint.css
-            extras/native-forge-page.js
-            extras/native-forge.html
-            extras/native-forge.css
-            extras/studio-entry.js
-            scripts/install-architecture.js
-            scripts/check-architecture.js
-            scripts/gameforge-test-context.js
-            scripts/export-native-forge-fixture.js
-            scripts/patch-test-report-architecture.js
-          if-no-files-found: error
 
       - name: Upload website architecture build log
         if: always()
@@ -142,14 +123,21 @@ jobs:
           test -f "$ROOT/systems/entity/client/GameForgeCustomMobRenderer.java"
           grep -q 'ItemStackHandler(3)' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
           grep -q 'saveAdditional' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'dirty && level.getGameTime() % 5L == 0L' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
+          grep -q 'definition().needsFuel() && matches' "$ROOT/systems/machine/GameForgeMachineBlockEntity.java"
           grep -q 'SimpleChannel' "$ROOT/systems/network/MachineNetwork.java"
           grep -q 'PLAY_TO_SERVER' "$ROOT/systems/network/MachineNetwork.java"
+          grep -q 'PLAY_TO_CLIENT' "$ROOT/systems/network/MachineNetwork.java"
           grep -q 'sender.containerMenu instanceof GameForgeMachineMenu' "$ROOT/systems/network/MachineActionPacket.java"
           grep -q 'distanceToSqr' "$ROOT/systems/network/MachineActionPacket.java"
+          grep -q 'gameforgeMachineActionTick' "$ROOT/systems/network/MachineActionPacket.java"
           grep -q 'DeferredRegister<EntityType<?>>' "$ROOT/systems/registry/SystemEntities.java"
+          grep -q 'RegistryObject<Block> _3D_PRESS' "$ROOT/systems/registry/SystemBlocks.java"
           grep -q 'MeleeAttackGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
           grep -q 'HurtByTargetGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
           grep -q 'NearestAttackableTargetGoal' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q 'case "undead" -> MobType.UNDEAD' "$ROOT/systems/entity/GameForgeCustomMob.java"
+          grep -q '"undead"' "$ROOT/systems/entity/EntityDefinitions.java"
           JAR="$(find native-systems-fixture/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' | head -n 1)"
           test -n "$JAR"
           unzip -t "$JAR"
@@ -157,7 +145,9 @@ jobs:
             unzip -l "$JAR" | grep -q "$CLASS.class"
           done
           unzip -l "$JAR" | grep -q 'assets/gameforge_native_systems_fixture/models/item/undead_guard_spawn_egg.json'
+          unzip -l "$JAR" | grep -q 'assets/gameforge_native_systems_fixture/models/item/3d_press.json'
           unzip -l "$JAR" | grep -q 'data/gameforge_native_systems_fixture/loot_tables/blocks/star_forge.json'
+          unzip -l "$JAR" | grep -q 'data/gameforge_native_systems_fixture/loot_tables/blocks/3d_press.json'
           echo "Verified generated native systems JAR: $JAR"
 
       - name: Upload baseline Forge source fixture
@@ -194,6 +184,7 @@ jobs:
         with:
           name: gameforge-native-build-logs
           path: |
+            architecture-site-build.log
             native-forge-build.log
             native-systems-build.log
           if-no-files-found: warn
