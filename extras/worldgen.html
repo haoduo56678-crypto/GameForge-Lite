@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111c">
+  <title>GameForge 世界与维度工作室</title>
+  <meta name="description" content="用一句话、表单和 Blueprint 创建 Minecraft Forge 1.20.1 自定义群系、可进入维度、浮空岛、虚空世界、下界和末地风格世界。">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="worldgen.css">
+</head>
+<body>
+  <main class="wg-shell">
+    <div class="wg-top">
+      <a href="index.html">← 返回 GameForge</a>
+      <a id="blueprintLink" href="blueprint.html">Blueprint</a>
+      <a id="forgeLink" href="native-forge.html">Java 工程</a>
+      <span>Minecraft 1.20.1 · Forge 47.4.21</span>
+    </div>
+
+    <section class="wg-hero">
+      <div>
+        <span class="wg-kicker">World & Dimension Studio</span>
+        <h1>从一句话，生成<br><em>真正可进入的维度。</em></h1>
+        <p>创建自定义群系、维度类型、噪声或平坦地形、原版结构兼容和维度钥匙。首版使用 Minecraft 1.20.1 已验证的原版地形预设，避免生成无法加载的任意噪声配置。</p>
+      </div>
+      <div class="wg-hero-actions">
+        <button class="wg-button" data-template="wasteland">末日废土</button>
+        <button class="wg-button" data-template="floating">浮空群岛</button>
+        <button class="wg-button" data-template="void">虚空世界</button>
+        <a class="wg-button primary" id="heroForgeLink" href="native-forge.html">生成 Forge 工程</a>
+      </div>
+    </section>
+
+    <section class="wg-grid">
+      <article class="wg-panel wg-project-panel">
+        <header><div><strong>项目与一句话创建</strong><small>一次生成配套群系和维度。</small></div></header>
+        <div class="wg-body">
+          <label class="wg-field"><span>当前项目</span><select id="projectSelect"></select></label>
+          <label class="wg-field"><span>世界描述</span><textarea id="promptInput" placeholder="例如：做一个叫灰烬荒原的永夜废土维度，有村庄、矿井和废弃传送门"></textarea></label>
+          <div class="wg-actions">
+            <button class="wg-button primary" id="parsePrompt">解析并加入项目</button>
+            <button class="wg-button" id="newBiome">新建群系</button>
+            <button class="wg-button" id="newDimension">新建维度</button>
+          </div>
+          <div class="wg-status" id="statusText">准备创建世界。</div>
+        </div>
+      </article>
+
+      <article class="wg-panel wg-list-panel">
+        <header><div><strong>世界生成组件</strong><small>群系与维度彼此独立，可重复组合。</small></div><span id="componentCount">0</span></header>
+        <div class="wg-component-list" id="componentList"></div>
+      </article>
+
+      <article class="wg-panel wg-editor-panel">
+        <header>
+          <div><strong id="editorTitle">世界生成编辑器</strong><small id="editorSubtitle">选择群系或维度。</small></div>
+          <button class="wg-button danger" id="deleteComponent" disabled>删除</button>
+        </header>
+        <div class="wg-body">
+          <div class="wg-tabs">
+            <button class="active" data-tab="biome">自定义群系</button>
+            <button data-tab="dimension">可进入维度</button>
+          </div>
+
+          <form id="biomeForm" class="wg-form">
+            <div class="wg-row">
+              <label class="wg-field"><span>群系名称</span><input id="biomeName" value="冰霜荒原"></label>
+              <label class="wg-field"><span>注册 ID</span><input id="biomeId" value="frozen_wastes" spellcheck="false"></label>
+            </div>
+            <div class="wg-four">
+              <label class="wg-field"><span>温度</span><input id="biomeTemperature" type="number" value="-0.5" min="-2" max="2" step="0.05"></label>
+              <label class="wg-field"><span>降水量</span><input id="biomeDownfall" type="number" value="0.8" min="0" max="1" step="0.05"></label>
+              <label class="wg-field"><span>地物预设</span><select id="biomeFeatures"><option value="lush">完整主世界</option><option value="sparse">稀疏地物</option><option value="nether">下界地物</option><option value="end">末地地物</option><option value="empty">无地物</option></select></label>
+              <label class="wg-field"><span>生物生成</span><select id="biomeSpawns"><option value="mixed">动物与怪物</option><option value="peaceful">和平动物</option><option value="hostile">敌对怪物</option><option value="nether">下界生物</option><option value="end">末地生物</option><option value="empty">不生成</option></select></label>
+            </div>
+            <label class="wg-check"><input id="biomePrecipitation" type="checkbox" checked>允许雨雪</label>
+            <fieldset class="wg-colors"><legend>环境颜色</legend>
+              <label><span>天空</span><input id="biomeSky" type="color" value="#78a7ff"></label>
+              <label><span>雾</span><input id="biomeFog" type="color" value="#c0d8ff"></label>
+              <label><span>水</span><input id="biomeWater" type="color" value="#3f76e4"></label>
+              <label><span>水下雾</span><input id="biomeWaterFog" type="color" value="#050533"></label>
+              <label><span>草</span><input id="biomeGrass" type="color" value="#79c05a"></label>
+              <label><span>树叶</span><input id="biomeFoliage" type="color" value="#59ae30"></label>
+            </fieldset>
+            <fieldset class="wg-structures"><legend>允许原版结构</legend>
+              <label class="wg-check"><input type="checkbox" data-structure="village">村庄</label>
+              <label class="wg-check"><input type="checkbox" data-structure="mineshaft">矿井</label>
+              <label class="wg-check"><input type="checkbox" data-structure="ruined_portal">废弃传送门</label>
+            </fieldset>
+            <button class="wg-button success" type="submit">保存群系组件</button>
+          </form>
+
+          <form id="dimensionForm" class="wg-form" hidden>
+            <div class="wg-row">
+              <label class="wg-field"><span>维度名称</span><input id="dimensionName" value="浮空群岛"></label>
+              <label class="wg-field"><span>注册 ID</span><input id="dimensionId" value="sky_islands" spellcheck="false"></label>
+            </div>
+            <div class="wg-row">
+              <label class="wg-field"><span>地形预设</span><select id="dimensionTerrain"><option value="overworld">主世界</option><option value="large_biomes">大型群系</option><option value="amplified">放大化</option><option value="caves">洞穴世界</option><option value="nether">下界</option><option value="end">末地</option><option value="floating_islands">浮空岛</option><option value="flat">平坦世界</option><option value="void">虚空世界</option></select></label>
+              <label class="wg-field"><span>固定群系 ID</span><input id="dimensionBiome" list="biomeOptions" value="minecraft:plains" spellcheck="false"><datalist id="biomeOptions"></datalist></label>
+            </div>
+            <div class="wg-four">
+              <label class="wg-field"><span>最低 Y</span><input id="dimensionMinY" type="number" value="-64" step="16"></label>
+              <label class="wg-field"><span>总高度</span><input id="dimensionHeight" type="number" value="384" min="16" step="16"></label>
+              <label class="wg-field"><span>逻辑高度</span><input id="dimensionLogicalHeight" type="number" value="384" min="16" step="16"></label>
+              <label class="wg-field"><span>坐标比例</span><input id="dimensionScale" type="number" value="1" min="0.00001" step="0.1"></label>
+            </div>
+            <div class="wg-check-grid">
+              <label class="wg-check"><input id="dimensionNatural" type="checkbox" checked>自然维度</label>
+              <label class="wg-check"><input id="dimensionSkylight" type="checkbox" checked>天空光</label>
+              <label class="wg-check"><input id="dimensionCeiling" type="checkbox">封闭顶部</label>
+              <label class="wg-check"><input id="dimensionUltrawarm" type="checkbox">超温暖</label>
+              <label class="wg-check"><input id="dimensionBedWorks" type="checkbox" checked>允许床</label>
+              <label class="wg-check"><input id="dimensionAnchorWorks" type="checkbox">重生锚有效</label>
+            </div>
+            <div class="wg-row">
+              <label class="wg-field"><span>固定时间（-1=正常昼夜）</span><input id="dimensionFixedTime" type="number" value="-1" min="-1" max="23999"></label>
+              <label class="wg-field"><span>环境渲染</span><select id="dimensionEffects"><option value="minecraft:overworld">主世界天空</option><option value="minecraft:the_nether">下界天空</option><option value="minecraft:the_end">末地天空</option></select></label>
+            </div>
+            <fieldset class="wg-travel"><legend>维度入口与安全出生</legend>
+              <div class="wg-row"><label class="wg-field"><span>钥匙物品 ID</span><input id="dimensionKeyId" value="sky_islands_key" spellcheck="false"></label><label class="wg-field"><span>钥匙名称</span><input id="dimensionKeyName" value="浮空群岛钥匙"></label></div>
+              <div class="wg-row"><label class="wg-field"><span>进入高度</span><input id="dimensionSpawnY" type="number" value="96"></label><label class="wg-field"><span>平台方块</span><input id="dimensionPlatformBlock" value="minecraft:stone" spellcheck="false"></label></div>
+              <label class="wg-check"><input id="dimensionPlatform" type="checkbox">进入时创建 5×5 安全平台</label>
+            </fieldset>
+            <button class="wg-button success" type="submit">保存维度组件</button>
+          </form>
+        </div>
+      </article>
+
+      <article class="wg-panel wg-diagnostics-panel">
+        <header><div><strong>可玩性与生成诊断</strong><small>检查 IR、数据注册表和原生工程文件。</small></div><button class="wg-button" id="refreshDiagnostics">刷新</button></header>
+        <div class="wg-body">
+          <div class="wg-metrics" id="metrics"></div>
+          <div class="wg-diagnostics" id="diagnostics"></div>
+          <pre class="wg-preview" id="irPreview">等待项目…</pre>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="js/core.js"></script>
+  <script src="js/generators.js"></script>
+  <script src="local-vocabulary.js"></script>
+  <script src="vocabulary-data.js"></script>
+  <script src="vocabulary-pack.js"></script>
+  <script src="core-mechanisms.js"></script>
+  <script src="advanced-weapon-mechanics.js"></script>
+  <script src="advanced-weapon-context-patch.js"></script>
+  <script src="gameforge-ir.js"></script>
+  <script src="gameforge-blueprint.js"></script>
+  <script src="native-forge-generator.js"></script>
+  <script src="native-systems.js"></script>
+  <script src="native-systems-legacy-bridge.js"></script>
+  <script src="native-systems-blueprint.js"></script>
+  <script src="worldgen-core.js"></script>
+  <script src="worldgen-native.js"></script>
+  <script src="worldgen-blueprint.js"></script>
+  <script src="worldgen-page.js"></script>
+</body>
+</html>
