@@ -9,13 +9,16 @@ const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const ADVANCED = path.join(DIST, 'advanced-weapon-mechanics.js');
+const CONTEXT_PATCH = path.join(DIST, 'advanced-weapon-context-patch.js');
 
 function read(filePath) {
   if (!fs.existsSync(filePath)) throw new Error(`Missing advanced weapon test file: ${path.relative(ROOT, filePath)}`);
   return fs.readFileSync(filePath, 'utf8');
 }
 
-execFileSync(process.execPath, ['--check', ADVANCED], { stdio: 'inherit' });
+for (const filePath of [ADVANCED, CONTEXT_PATCH]) {
+  execFileSync(process.execPath, ['--check', filePath], { stdio: 'inherit' });
+}
 
 function createContext() {
   const storage = new Map();
@@ -97,9 +100,11 @@ load(context, 'vocabulary-data.js');
 load(context, 'vocabulary-pack.js');
 load(context, 'core-mechanisms.js');
 load(context, 'advanced-weapon-mechanics.js');
+load(context, 'advanced-weapon-context-patch.js');
 
 const GF = context.GameForge;
 if (!GF?.generators?.__advancedWeaponMechanicsInstalled) throw new Error('Advanced weapon mechanics did not install.');
+if (!GF?.generators?.__advancedWeaponContextPatchInstalled) throw new Error('Advanced weapon context patch did not install.');
 
 const project = GF.project.create({ namespace: 'gf_advanced_check' });
 const cases = [
@@ -127,6 +132,27 @@ const cases = [
     prompt: '做一把右键召唤闪电的雷霆之剑，冷却5秒',
     check(spec) {
       return spec.effect === 'lightning' && spec.trigger === 'right_click' && !spec.runtimeRequired && spec.cooldown === 5;
+    },
+  },
+  {
+    prompt: '做一把蜘蛛剑，右键吐丝',
+    check(spec) {
+      return spec.targetEntity !== 'minecraft:spider' && spec.targetGroup === 'any'
+        && spec.trigger === 'right_click' && !spec.runtimeRequired;
+    },
+  },
+  {
+    prompt: '做一把裁决剑，秒杀所有生物但不伤害玩家',
+    check(spec) {
+      return spec.effect === 'instant_kill' && spec.targetGroup === 'any'
+        && spec.affectPlayers === false && spec.runtimeRequired === true;
+    },
+  },
+  {
+    prompt: '做一把决斗剑，只对玩家造成双倍伤害',
+    check(spec) {
+      return spec.effect === 'damage_multiplier' && spec.damageMultiplier === 2
+        && spec.targetGroup === 'player' && spec.affectPlayers === true;
     },
   },
 ];
