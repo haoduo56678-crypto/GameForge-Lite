@@ -1,0 +1,60 @@
+name: Repair Architecture Package Chunks
+
+on:
+  push:
+    branches:
+      - feature/ir-blueprint-native-forge
+    paths:
+      - '.github/workflows/repair-architecture-chunks.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ir-blueprint-native-forge
+          fetch-depth: 0
+
+      - name: Repair connector-transmission character errors
+        shell: python
+        run: |
+          from pathlib import Path
+          repairs = {
+              Path('architecture-v1/chunk-00'): (4698, 'm', 'b'),
+              Path('architecture-v1/chunk-04'): (4905, 'n', 'k'),
+              Path('architecture-v1/chunk-09'): (2737, 'a', 'e'),
+          }
+          for path, (index, found, expected) in repairs.items():
+              text = path.read_text(encoding='utf-8').strip()
+              if len(text) != (4648 if path.name == 'chunk-11' else 5500):
+                  raise SystemExit(f'Unexpected length for {path}: {len(text)}')
+              if text[index] != found:
+                  raise SystemExit(f'{path} index {index}: expected transmitted {found!r}, found {text[index]!r}')
+              text = text[:index] + expected + text[index + 1:]
+              path.write_text(text + '\n', encoding='utf-8')
+              print(f'Repaired {path} at {index}: {found} -> {expected}')
+
+      - name: Verify repaired archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat architecture-v1/chunk-* | tr -d '[:space:]' > /tmp/architecture-v1.b64
+          base64 -d /tmp/architecture-v1.b64 > /tmp/architecture-v1.tar.gz
+          echo 'd31ffffdd74cb19a0a2b42bf61a5195c4aa4ea08370c9fd31aceece97427d81d  /tmp/architecture-v1.tar.gz' | sha256sum -c -
+          gzip -t /tmp/architecture-v1.tar.gz
+
+      - name: Commit repaired chunks and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'GameForge Build Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/repair-architecture-chunks.yml
+          git add architecture-v1/chunk-00 architecture-v1/chunk-04 architecture-v1/chunk-09
+          git commit -m 'Repair verified architecture package chunks'
+          git push origin HEAD:feature/ir-blueprint-native-forge
