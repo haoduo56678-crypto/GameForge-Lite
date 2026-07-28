@@ -70,10 +70,14 @@ requireMarkers(entry, 'dist/jar-entry.js', [
   '精确命中高级技能需要 Runtime 0.3.0',
   '亡灵秒杀、低生命斩杀、倍率伤害、吸血和精确目标条件不会生效',
   '转换器若显示“Runtime 必需”',
+  '我已经安装 Runtime 0.3.0 或更高版本',
   '先下载 Runtime 0.3.0（推荐）',
   '仍然下载作品',
-  'gameforge.runtime.notice.installed.v1',
+  'gameforge.runtime.notice.installed.v2',
   'interceptProjectDownload'
 ]);
+if (entry.includes('gameforge.runtime.notice.installed.v1')) {
+  throw new Error('Runtime download notice still contains the old acknowledgement key.');
+}
 
-console.log('ZIP → JAR naming, conditional Runtime dependency, advanced download notice, and validation checks passed.');
+console.log('ZIP → JAR naming, conditional Runtime dependency, advanced download notice, acknowledgement migration, and validation checks passed.');
