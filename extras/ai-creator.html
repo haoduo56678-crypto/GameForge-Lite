@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#091019">
+  <meta name="description" content="把复杂 Mod 创作需求交给 AI 深度拆解，再由 GameForge 本地生成器执行和验证。">
+  <title>AI 创作 · GameForge Lite</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="capability-status.css">
+  <link rel="stylesheet" href="ai-creator.css">
+</head>
+<body class="gf-ai-page">
+  <header class="gf-ai-topbar">
+    <a class="gf-ai-brand" href="index.html" aria-label="返回 GameForge 首页">
+      <span>GF</span>
+      <div><strong>GameForge</strong><small>AI 创作</small></div>
+    </a>
+    <div class="gf-ai-top-actions">
+      <span class="gf-ai-connection" id="aiConnectionState"><i></i>等待接入 API</span>
+      <a class="gf-ai-ghost-button" href="index.html">返回本地创作</a>
+    </div>
+  </header>
+
+  <main class="gf-ai-shell">
+    <section class="gf-ai-hero">
+      <div class="gf-ai-hero-copy">
+        <span class="gf-ai-kicker">复杂需求交给 AI，生成仍由 GameForge 把关</span>
+        <h1>把你的 Mod 想法，<br><em>变成可以执行的创作计划</em></h1>
+        <p>AI 负责理解、拆分和规划；GameForge 负责检查能力、生成组件和明确告诉你哪些能做、哪些暂时做不了。</p>
+      </div>
+      <div class="gf-ai-flow" aria-label="AI 创作流程">
+        <div class="done"><b>1</b><span>描述想法<small>自然语言即可</small></span></div>
+        <i></i>
+        <div class="active"><b>2</b><span>AI 深度设计<small>拆成可执行步骤</small></span></div>
+        <i></i>
+        <div><b>3</b><span>本地检查<small>绿黄灰红状态</small></span></div>
+        <i></i>
+        <div><b>4</b><span>生成工程<small>Forge / Blueprint</small></span></div>
+      </div>
+    </section>
+
+    <section class="gf-ai-workspace">
+      <article class="gf-ai-compose-card">
+        <header>
+          <div><span>你的创作要求</span><h2>告诉 AI 你想做什么</h2></div>
+          <button type="button" class="gf-ai-text-button" id="clearPrompt">清空</button>
+        </header>
+        <textarea id="aiPrompt" maxlength="12000" placeholder="例如：做一个末日生存 Mod。白天玩家探索废墟，晚上出现尸潮；加入感染值、商人、枪械和一个三阶段最终 Boss。先生成当前能运行的部分，不能完成的功能要明确列出来。"></textarea>
+        <div class="gf-ai-prompt-footer">
+          <div class="gf-ai-context-toggle">
+            <label><input type="checkbox" id="includeProject" checked><span></span>带上当前项目</label>
+            <small id="projectContextText">AI 可以读取项目摘要，继续修改现有作品</small>
+          </div>
+          <span id="promptCount">0 / 12000</span>
+        </div>
+
+        <div class="gf-ai-suggestions">
+          <span>试试这些复杂需求</span>
+          <div>
+            <button type="button" data-prompt="做一个冰霜地下城 Mod，包含三个房间、钥匙门、宝箱奖励和一个会召唤骷髅的 Boss。">冰霜地下城</button>
+            <button type="button" data-prompt="做一个工业生存 Mod，先加入发电机、粉碎机、矿石处理和科技树。不能完整实现的系统要给出可玩的替代方案。">工业生存</button>
+            <button type="button" data-prompt="做一个末日世界，白天搜集资源，晚上每七天出现强化尸潮，并加入感染值、商店和枪械。">末日尸潮</button>
+          </div>
+        </div>
+
+        <button class="gf-ai-primary" type="button" id="startAiCreation">
+          <span class="gf-ai-primary-icon">✦</span>
+          <span><strong>交给 AI 深度设计</strong><small id="startButtonHint">API 接入后即可发送</small></span>
+          <b>→</b>
+        </button>
+        <p class="gf-ai-api-note">此页面不会自行调用任何模型。你接入 API 后，只需实现 <code>window.GameForgeAIAdapter.createPlan()</code>。</p>
+      </article>
+
+      <aside class="gf-ai-side-column">
+        <article class="gf-ai-status-card">
+          <header><span>这次 AI 会做什么</span><b>AI 规划</b></header>
+          <ul>
+            <li><i>01</i><div><strong>理解完整要求</strong><p>识别多个系统、条件、关系和优先级。</p></div></li>
+            <li><i>02</i><div><strong>拆成创作步骤</strong><p>输出组件、行为、参数和 Blueprint 操作。</p></div></li>
+            <li><i>03</i><div><strong>给出可运行替代方案</strong><p>复杂功能暂时做不了时，不生成假的结果。</p></div></li>
+          </ul>
+        </article>
+
+        <article class="gf-ai-trust-card">
+          <div class="gf-ai-shield">✓</div>
+          <div><strong>AI 不能私自把功能标绿</strong><p>AI 返回的计划还会经过 GameForge 本地能力检查。最终状态以实际生成器为准。</p></div>
+        </article>
+
+        <article class="gf-ai-local-card">
+          <header><div><span>不需要 AI？</span><h3>简单内容继续免费本地生成</h3></div></header>
+          <p>箱子、武器、方块、生物、机器和基础维度仍可在本地立即创建。</p>
+          <a href="index.html">回到本地智能创建 <b>→</b></a>
+        </article>
+      </aside>
+    </section>
+
+    <section class="gf-ai-result" id="aiResult" hidden>
+      <header>
+        <div><span>AI 已返回创作计划</span><h2>先确认最终会生成什么</h2></div>
+        <span class="gf-ai-result-state" id="aiResultState">等待检查</span>
+      </header>
+      <div id="aiResultBody"></div>
+      <footer>
+        <button type="button" class="gf-ai-ghost-button" id="editAgain">继续修改要求</button>
+        <button type="button" class="gf-ai-primary compact" id="applyAiPlan"><span><strong>应用到当前项目</strong><small>由本地生成器执行</small></span><b>→</b></button>
+      </footer>
+    </section>
+  </main>
+
+  <template id="aiLoadingTemplate">
+    <div class="gf-ai-loading">
+      <div class="gf-ai-orbit"><i></i><i></i><i></i></div>
+      <strong>AI 正在拆解你的 Mod 需求</strong>
+      <p>完成后仍会经过本地能力检查，不会把未实现功能当成已完成。</p>
+    </div>
+  </template>
+
+  <script src="js/core.js"></script>
+  <script src="js/generators.js"></script>
+  <script src="local-vocabulary.js"></script>
+  <script src="core-mechanisms.js"></script>
+  <script src="architecture-core.js"></script>
+  <script src="native-systems.js"></script>
+  <script src="worldgen-core.js"></script>
+  <script src="capability-status.js"></script>
+  <script src="content-catalog.js"></script>
+  <script src="ai-creator.js"></script>
+</body>
+</html>

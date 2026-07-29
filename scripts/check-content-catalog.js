@@ -56,7 +56,6 @@ function expectStatus(prompt, status, idPart = '') {
   return value;
 }
 
-// 基础内容：不需要用户额外写“物品”或“方块”。
 const basicCases = [
   ['生成一个箱子','block.chest','minecraft:chest'],
   ['做个工作台','block.crafting_table','minecraft:crafting_table'],
@@ -88,7 +87,6 @@ if (pair.components.length !== 2 || !pair.components.some((entry) => entry.spec?
   throw new Error('A prompt containing two catalog objects should create both components.');
 }
 
-// 非基础内容：生成可用底座，同时直说缺失能力。
 expectStatus('做一个保险箱，54格容量带密码','partial','storage');
 const firearmReport = expectStatus('做一把激光枪，使用电池和自定义子弹','partial','laser_gun');
 if (!firearmReport.items.some((entry) => entry.status === 'ready')) throw new Error('Laser gun should still produce a usable ranged base.');
@@ -103,14 +101,12 @@ expectStatus('做一个任务NPC商店','saved','economy');
 const nativeChest = component('生成一个真正的新箱子方块');
 if (nativeChest.type !== 'forge' || nativeChest.spec?.contentType !== 'block') throw new Error('Explicit native chest request should create a true Forge block component.');
 
-// 上下文优先级：不能把掉落、配方、Boss 或世界需求抢成普通目录物品。
 if (plan('箱子掉落钻石').components[0]?.type !== 'loot') throw new Error('Chest loot prompt should remain a loot table.');
 if (plan('9个木板合成箱子').components[0]?.type !== 'recipe') throw new Error('Chest recipe prompt should remain a recipe.');
 if (plan('做一个箱子 Boss').components[0]?.type !== 'mob') throw new Error('Chest Boss prompt should remain a mob/Boss request.');
 const worldPlan = plan('做一个有箱子的浮空岛世界');
 if (worldPlan.components.length < 2 || !worldPlan.components.some(GF.worldgen.isDimension)) throw new Error('World prompt should remain in the world generator.');
 
-// 生成结果要真正使用目录指定的原版载体，而不是只在提示层变绿。
 const chestProject = GF.project.create({ name:'Chest Catalog Fixture', namespace:'chest_catalog_fixture', components:[component('生成一个箱子')] });
 const generated = GF.generators.generateProject(chestProject);
 const chestGive = generated.datapack.find((entry) => entry.name.endsWith('/give.mcfunction'));
@@ -125,6 +121,6 @@ for (const relative of ['index.html','blueprint.html','native-forge.html','nativ
   }
 }
 const sw = fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8');
-if (!sw.includes('content-catalog.js') || !sw.includes('content-catalog-v1')) throw new Error('Service worker is missing the content catalog asset or cache version.');
+if (!sw.includes('content-catalog.js') || !/const CACHE_NAME = 'gameforge-lite-v2\.1\.1-[^']+';/.test(sw)) throw new Error('Service worker is missing the content catalog asset or a valid cache version.');
 
 console.log(`Broad content catalog checks passed: ${Catalog.stats.entries} entries, ${Catalog.stats.aliases} aliases, basics, advanced concepts, routing and generated output verified.`);
