@@ -108,8 +108,9 @@ for (const marker of ['#smartCreate', '#downloadBundleTop', '#downloadProject', 
   if (!ui.includes(marker)) throw new Error(`Creation/download guard missing: ${marker}`);
 }
 const sw = fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8');
-for (const marker of ['capability-status.js', 'capability-status-ui.js', 'capability-status.css', 'gameforge-lite-v2.1.1-capability-status-v1']) {
+for (const marker of ['capability-status.js', 'capability-status-ui.js', 'capability-status.css']) {
   if (!sw.includes(marker)) throw new Error(`Service worker missing capability asset: ${marker}`);
 }
+if (!/const CACHE_NAME = 'gameforge-lite-v2\.1\.1-[^']+';/.test(sw)) throw new Error('Service worker cache version is missing or malformed.');
 
 console.log('Plain-language capability status checks passed: prompt honesty, smart routing, project reports, download guards and visible color states verified.');
